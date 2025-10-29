@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+# Apply database migrations
+python3 manage.py makemigrations --no-input
+python3 manage.py migrate --no-input
+
+# Collect static files
+python3 manage.py collectstatic --no-input
+
+# Run the application using Gunicorn
+# exec gunicorn core.wsgi:application \
+#     --bind 0.0.0.0:8000 \
+#     --workers 3 \
+#     --timeout 120 \
+#     --log-level info
+
+#
+python manage.py runserver 0.0.0.0:8000 #used for not production , use gunicorn for production
