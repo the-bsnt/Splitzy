@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: ./docker/django/Dockerfile
+      context: ./backend
+      dockerfile: ../docker/django/Dockerfile
     command: /start
     volumes:
       - ./backend:/backend
@@ -20,6 +20,24 @@ services:
       - postgres-db
     networks:
       - splitzy # Use the correct network name
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/react/Dockerfile
+
+    container_name: splitzy-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - postgres-db
+    networks:
+      - splitzy # Use the correct network name
+
   postgres-db:
     image: postgres:15.0-alpine
     ports:
