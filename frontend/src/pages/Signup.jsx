@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Mail, User, Lock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
+import { createUser } from "../api/client";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -65,7 +66,7 @@ export default function SignUp() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -78,13 +79,50 @@ export default function SignUp() {
 
     const isValid = validate();
     if (isValid) {
-      console.log("Form submitted:", formData);
+      const { password2, ...submitData } = formData; // to eradicate password2 from formData and put rest or submitData
+
+      try {
+        const { data, status } = await createUser(submitData);
+        console.log("Signup processed:", data, "Status:", status);
+      } catch (err) {
+        // Check if it's an HTTP error with a response
+        if (err.response) {
+          const status = err.response.status;
+          const errorData = err.response.data;
+
+          if (status === 400) {
+            // Django REST Framework sends field-level errors like:
+            // { "email": ["user with this email already exists."] }
+            if (typeof errorData === "object") {
+              // Example: extract first message for each field
+              const formattedErrors = {};
+
+              for (const [field, messages] of Object.entries(errorData)) {
+                formattedErrors[field] = Array.isArray(messages)
+                  ? messages.join(", ")
+                  : messages;
+              }
+
+              // Set to state for display in UI
+              setErrors(formattedErrors);
+            } else {
+              // Unexpected format
+              setErrors({ general: "Something went wrong." });
+            }
+          } else {
+            // Non-400 errors (e.g., 500)
+            setErrors({ general: "Server error. Please try again later." });
+          }
+        } else {
+          // Network or unknown error
+          setErrors({ general: "Network error. Check your connection." });
+        }
+      }
     }
-    // Add your registration logic here
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
         <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
