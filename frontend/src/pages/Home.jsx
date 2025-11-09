@@ -41,9 +41,11 @@ export default function Home() {
         </p>
 
         <div className="flex justify-center gap-4">
-          <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
-            Get Started <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link to="/signup">
+            <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
+              Get Started <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
           <Button variant="outline">Learn More</Button>
         </div>
       </motion.div>

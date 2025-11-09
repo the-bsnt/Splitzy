@@ -3,6 +3,7 @@ from rest_framework import generics, mixins
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 
 # third party import
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -27,15 +28,13 @@ class RegisterView(APIView):
                 refresh = RefreshToken.for_user(usr)
                 return Response(
                     {
-                        "tokens": {
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        }
+                        "refresh": str(refresh),
+                        "access": str(refresh.access_token),
                     },
                     status=status.HTTP_202_ACCEPTED,
                 )
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PasswordChangeView(APIView):

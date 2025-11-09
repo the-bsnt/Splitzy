@@ -7,4 +7,3 @@ export const createUser = async (data) => {
   const response = await axios.post(API_URL, data);
   return { data: response.data, status: response.status };
 };
-// Let axios throw the error automatically

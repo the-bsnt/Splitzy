@@ -79,27 +79,46 @@ export default function SignUp() {
 
     const isValid = validate();
     if (isValid) {
-      const { password2, ...submitData } = formData;
+      const { password2, ...submitData } = formData; // to eradicate password2 from formData and put rest or submitData
 
       try {
-        const { res_data, status } = await createUser(submitData);
-        console.log("Signup processed:", res_data, "Status:", status);
+        const { data, status } = await createUser(submitData);
+        console.log("Signup processed:", data, "Status:", status);
       } catch (err) {
-        console.error("Signup failed:", err);
-        if (err.response?.status === 400) {
+        // Check if it's an HTTP error with a response
+        if (err.response) {
+          const status = err.response.status;
           const errorData = err.response.data;
-          console.log(errorData.detail);
 
-          if (errorData.errors) {
-            // Field-specific errors
-            setErrors(errorData.errors);
-          } else if (errorData.message) {
-            setErrors({ general: errorData.message });
+          if (status === 400) {
+            // Django REST Framework sends field-level errors like:
+            // { "email": ["user with this email already exists."] }
+            if (typeof errorData === "object") {
+              // Example: extract first message for each field
+              const formattedErrors = {};
+
+              for (const [field, messages] of Object.entries(errorData)) {
+                formattedErrors[field] = Array.isArray(messages)
+                  ? messages.join(", ")
+                  : messages;
+              }
+
+              // Set to state for display in UI
+              setErrors(formattedErrors);
+            } else {
+              // Unexpected format
+              setErrors({ general: "Something went wrong." });
+            }
+          } else {
+            // Non-400 errors (e.g., 500)
+            setErrors({ general: "Server error. Please try again later." });
           }
+        } else {
+          // Network or unknown error
+          setErrors({ general: "Network error. Check your connection." });
         }
       }
     }
-    // Add your registration logic here
   };
 
   return (
