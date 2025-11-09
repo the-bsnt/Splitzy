@@ -23,13 +23,7 @@ class RegisterView(APIView):
         try:
             serializer = CustomUserSerializer(data=request.data)
             if serializer.is_valid(raise_exception=True):
-                try:
-                    usr = serializer.save()
-                except Exception as e:
-                    return Response(
-                        {"detail": f"User Registration Unsuccessfull! Error :{e}"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                usr = serializer.save()
                 refresh = RefreshToken.for_user(usr)
                 return Response(
                     {
@@ -41,9 +35,8 @@ class RegisterView(APIView):
                     status=status.HTTP_202_ACCEPTED,
                 )
         except Exception as e:
-            return Response(
-                {"detail": f"Error occured: {e}"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PasswordChangeView(APIView):
     def patch(self, request, *args, **kwargs):
@@ -89,7 +82,6 @@ class ProfileView(
 
     def patch(self, request, *args, **kwargs):
         pass
-        
 
     def get_object(self):
         return self.request.user

@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6 text-center">
+    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6 text-center">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl">
         <Link to="/" className="flex items-center">
