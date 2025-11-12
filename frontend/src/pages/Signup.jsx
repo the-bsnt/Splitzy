@@ -4,6 +4,7 @@ import { Mail, User, Lock, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
 import { authService } from "../services/authService";
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function SignUp() {
     password: "",
     password2: "",
   });
-
+  useRedirectIfLoggedIn();
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 

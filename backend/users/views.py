@@ -66,6 +66,10 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
+                if request.data.get("remember_me"):
+                    max_age = 7 * 24 * 60 * 60  # 7 days
+                else:
+                    max_age = None
                 response.set_cookie(
                     key="refresh_token",
                     value=str(refresh),
@@ -73,7 +77,7 @@ class LoginView(APIView):
                     secure=False,  # Change to True in production (with HTTPS)
                     samesite="Lax",
                     path="/",
-                    max_age=7 * 24 * 60 * 60,  # 7 days
+                    max_age=max_age,  # 7 days
                 )
                 return response
             else:
@@ -154,6 +158,7 @@ class RefreshTokenView(APIView):
 
 
 class LogoutView(APIView):
-    def post(self, request, *args, **kwargs):
-        response = Response({"message": "Logged Out"}, status=status.HTTP_200_OK)
+    def post(self, request):
+        response = Response({"detail": "Logged out successfully."})
         response.delete_cookie("refresh_token")
+        return response

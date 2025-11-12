@@ -1,11 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
 import Button from "../components/Button";
+import { authService } from "../services/authService";
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function Login() {
+  const navigate = useNavigate();
+
+  useRedirectIfLoggedIn();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -55,7 +61,7 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched({
       email: true,
@@ -64,8 +70,9 @@ export default function Login() {
 
     const isValid = validate();
     if (isValid) {
-      console.log("Login submitted:", formData);
-      // Add your login logic here
+      const response = await authService.login(formData);
+      localStorage.setItem("access_token", response.data.access);
+      navigate("/dashboard");
     }
   };
 

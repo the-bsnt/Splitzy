@@ -5,7 +5,8 @@ import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
 function Dashboard() {
   const navigate = useNavigate();
-  const onLogout = () => {
+  const onLogout = async () => {
+    const res = await authService.logout();
     localStorage.removeItem("access");
     navigate("/login");
   };
@@ -13,7 +14,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get("auth/profile/"); // Adjust to your protected endpoint
+        const res = await authService.profile();
         setUser(res.data);
       } catch (err) {
         console.error("Unauthorized or expired token", err);
@@ -30,7 +31,6 @@ function Dashboard() {
           <p> {user.email}</p>
           <Button
             onClick={() => {
-              localStorage.removeItem("access_token");
               onLogout();
             }}
           >

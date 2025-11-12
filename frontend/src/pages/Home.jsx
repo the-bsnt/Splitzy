@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowRight, Users, Wallet, PieChart } from "lucide-react";
 import Button from "../components/Button";
 import { Link } from "react-router-dom";
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function Home() {
+  useRedirectIfLoggedIn();
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6 text-center">
       {/* Navbar */}
