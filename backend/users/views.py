@@ -94,13 +94,14 @@ class PasswordChangeView(APIView):
             if serializer.is_valid(raise_exception=True):
                 old_password = serializer.data.get("old_password")
                 new_password = serializer.data.get("new_password")
-                try:
-                    token = RefreshToken(
-                        serializer.data.get("refresh")
+                token = request.COOKIES.get("refresh_token")
+                if not token:
+                    return Response(
+                        {"error": "Refresh token not found"},
+                        status=status.HTTP_401_UNAUTHORIZED,
                     )  # RefreshToken takes base64_encoded_token_string , Parses it (encoded refresh token string) into a RefreshToken object
                     # print(token)
-                except:
-                    raise ValueError("Token invalid")
+
                 user = request.user
                 if user.check_password(old_password):
                     token.blacklist()  # first blacklisting the refresh token
@@ -114,10 +115,8 @@ class PasswordChangeView(APIView):
                     {"detail": "Old password Unmatched!"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        except Exception as e:
-            return Response(
-                {"detail": f"Error occured: {e}"}, status=status.HTTP_400_BAD_REQUEST
-            )
+        except ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileView(
