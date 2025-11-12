@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, User, Lock, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
-import { createUser } from "../api/client";
+import { authService } from "../services/authService";
 
 export default function SignUp() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -82,8 +83,10 @@ export default function SignUp() {
       const { password2, ...submitData } = formData; // to eradicate password2 from formData and put rest or submitData
 
       try {
-        const { data, status } = await createUser(submitData);
-        console.log("Signup processed:", data, "Status:", status);
+        const response = await authService.signup(submitData);
+
+        localStorage.setItem("access_token", response.data.access);
+        navigate("/dashboard");
       } catch (err) {
         // Check if it's an HTTP error with a response
         if (err.response) {

@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from .models import CustomUser
 
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -17,8 +18,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         instance.set_password(psw)
         instance.save()
-        return instance 
-    
+        return instance
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+
 class PasswordChangeSerializer(serializers.Serializer):
     refresh = serializers.CharField()
     old_password = serializers.CharField()
