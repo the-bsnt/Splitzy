@@ -66,10 +66,6 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
-                if request.data.get("remember_me"):
-                    max_age = 7 * 24 * 60 * 60  # 7 days
-                else:
-                    max_age = None
                 response.set_cookie(
                     key="refresh_token",
                     value=str(refresh),
@@ -77,8 +73,9 @@ class LoginView(APIView):
                     secure=False,  # Change to True in production (with HTTPS)
                     samesite="Lax",
                     path="/",
-                    max_age=max_age,  # 7 days
+                    max_age=7 * 24 * 60 * 60,  # 7 days
                 )
+
                 return response
             else:
                 return Response(
@@ -140,10 +137,11 @@ class RefreshTokenView(APIView):
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get("refresh_token")
+
         if not refresh_token:
             return Response(
                 {"error": "Refresh token not found"},
-                status=status.HTTP_401_UNAUTHORIZED,
+                status=401,
             )
         try:
             refresh = RefreshToken(refresh_token)
@@ -152,7 +150,7 @@ class RefreshTokenView(APIView):
         except TokenError:
             return Response(
                 {"error": "Invalid or expired refresh token"},
-                status=status.HTTP_401_UNAUTHORIZED,
+                status=400,
             )
 
 

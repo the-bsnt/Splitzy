@@ -70,8 +70,9 @@ export default function Login() {
 
     const isValid = validate();
     if (isValid) {
+      localStorage.removeItem("access");
       const response = await authService.login(formData);
-      localStorage.setItem("access_token", response.data.access);
+      localStorage.setItem("access", response.data.access);
       navigate("/dashboard");
     }
   };

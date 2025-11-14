@@ -14,9 +14,9 @@ from .views import (
 )
 
 urlpatterns = [
-    path("signup/", RegisterView.as_view(), name="signup"),
-    path("login/", LoginView.as_view(), name="login"),
-    path("refresh/", RefreshTokenView.as_view(), name="refresh-token"),
+    path("auth/signup/", RegisterView.as_view(), name="signup"),
+    path("auth/login/", LoginView.as_view(), name="login"),
+    path("auth/refresh/", RefreshTokenView.as_view(), name="refresh-token"),
     path("verify/", TokenVerifyView.as_view(), name="token-verify"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="user_profile"),

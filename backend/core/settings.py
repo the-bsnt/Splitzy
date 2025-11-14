@@ -156,10 +156,20 @@ from datetime import timedelta
 # SIMPLE JWT CONF
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ["Bearer"],
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=2),
+    "REFRESH_TOKEN_LIFETIME": timedelta(seconds=10),
     # "SIGNING_KEY": SECRET_KEY,
 }
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
-CORS_ALLOW_CREDENTIALS = True  
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# Required for sending cookies from backend -> frontend on different domains
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
+
+SESSION_COOKIE_SECURE = False  # For development (True in production with HTTPS)
+CSRF_COOKIE_SECURE = False  # For development (True in production with HTTPS)

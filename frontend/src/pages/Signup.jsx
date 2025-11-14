@@ -86,7 +86,7 @@ export default function SignUp() {
       try {
         const response = await authService.signup(submitData);
 
-        localStorage.setItem("access_token", response.data.access);
+        localStorage.setItem("access", response.data.access);
         navigate("/dashboard");
       } catch (err) {
         // Check if it's an HTTP error with a response

@@ -7,7 +7,8 @@ export const useRedirectIfLoggedIn = () => {
   useEffect(() => {
     const accessToken = localStorage.getItem("access");
     if (accessToken) {
-      navigate("/dashboard");
+      console.log(accessToken);
+      // navigate("/dashboard");
     }
   }, [navigate]);
 };

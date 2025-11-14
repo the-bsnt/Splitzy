@@ -12,7 +12,12 @@ const api = axios.create({
 // Adds Authorization header with the access token to every request
 api.interceptors.request.use(
   (config) => {
+    // The endpoints that include /auth/ should not include authentication headers like login, refresh, register, etc.
+    if (config.url.includes("/auth/")) {
+      return config;
+    }
     const accessToken = localStorage.getItem("access");
+
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -81,10 +86,12 @@ api.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return api(originalRequest);
     } catch (refreshError) {
-      processQueue(refreshError, null);
-      localStorage.removeItem("access");
-      // window.location.href = "/login"; // redirect to login if refresh fails
-      return Promise.reject(refreshError);
+      if (refreshError.response?.status === 401) {
+        processQueue(refreshError, null);
+        localStorage.removeItem("access");
+        window.location.href = "/login"; // redirect to login if refresh fails
+        return Promise.reject(refreshError);
+      }
     } finally {
       isRefreshing = false;
     }
