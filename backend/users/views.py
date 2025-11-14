@@ -150,7 +150,7 @@ class RefreshTokenView(APIView):
         except TokenError:
             return Response(
                 {"error": "Invalid or expired refresh token"},
-                status=400,
+                status=401,
             )
 
 

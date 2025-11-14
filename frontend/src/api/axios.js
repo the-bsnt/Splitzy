@@ -45,15 +45,31 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If request already retried or not unauthorized → reject
-    if (
-      !error.response ||
-      error.response.status !== 401 ||
-      originalRequest._retry
-    ) {
+    // // If request already retried or not unauthorized → reject
+    // if (
+    //   !error.response ||
+    //   error.response.status !== 401 ||
+    //   originalRequest._retry
+    // ) {
+    //   return Promise.reject(error);
+    // }
+    // If no response or not a 401 → reject immediately
+    if (!error.response || error.response.status !== 401) {
       return Promise.reject(error);
     }
 
+    // If this is the refresh endpoint itself failing with 401 → user is not authenticated
+    if (originalRequest.url.includes("/auth/refresh/")) {
+      localStorage.clear();
+      localStorage.removeItem("access");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    // If already retried → reject to prevent infinite loop
+    if (originalRequest._retry) {
+      return Promise.reject(error);
+    }
     // Prevent multiple refreshes at the same time
     if (isRefreshing) {
       return new Promise(function (resolve, reject) {

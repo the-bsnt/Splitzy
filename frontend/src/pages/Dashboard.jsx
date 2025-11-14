@@ -14,6 +14,8 @@ function Dashboard() {
     const fetchProfile = async () => {
       try {
         const res = await authService.profile();
+
+        // if (res?.status === 401)
         setUser(res.data);
       } catch (err) {
         console.error("Unauthorized or expired token", err);
