@@ -22,4 +22,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/swagger/", include("core.swagger")),
     path("api/", include("users.urls")),
+    path("api/", include("groups.urls")),
+    path("api/", include("expenses.urls")),
 ]

@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "corsheaders",
     # custom apps
     "users",
+    "groups",
+    "expenses",
 ]
 
 MIDDLEWARE = [

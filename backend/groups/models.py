@@ -1,0 +1,36 @@
+from django.db import models
+import uuid
+from users.models import CustomUser
+
+
+class Groups(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(null=False)
+    admin = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="expense_groups"
+    )  # here admin should be transfered if admin is deleted??? for now group is deleted if admin is deleted.
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Membership(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField()
+    email = models.EmailField(null=False)
+    group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(CustomUser, null=True, on_delete=models.CASCADE)
+    verified = models.BooleanField(default=False)
+
+
+class Invitation(models.Model):
+    STATUS = [
+        ("P", "Pending"),
+        ("A", "Accepted"),
+        ("E", "Expired"),
+    ]
+    invited_email = models.EmailField()
+    group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
+    token = models.CharField()
+    status = models.CharField(max_length=1, choices=STATUS, default="P")
