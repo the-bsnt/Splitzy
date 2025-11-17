@@ -5,7 +5,7 @@ from users.models import CustomUser
 
 class Groups(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(null=False)
+    name = models.CharField(null=False, unique=True)
     admin = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="expense_groups"
     )  # here admin should be transfered if admin is deleted??? for now group is deleted if admin is deleted.
@@ -17,11 +17,19 @@ class Groups(models.Model):
 
 class Membership(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField()
-    email = models.EmailField(null=False)
+    name = models.CharField(null=True)
+    email = models.EmailField()
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(CustomUser, null=True, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(
+        CustomUser, null=True, blank=True, on_delete=models.CASCADE
+    )
     verified = models.BooleanField(default=False)
+    # @property
+    # def verified(self):
+    #     if self.user_id is not
+
+    def __str__(self):
+        return f"{self.group_id.name}-{self.email}"
 
 
 class Invitation(models.Model):
@@ -32,5 +40,8 @@ class Invitation(models.Model):
     ]
     invited_email = models.EmailField()
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
-    token = models.CharField()
+    token = models.CharField(max_length=100, unique=True)
     status = models.CharField(max_length=1, choices=STATUS, default="P")
+
+    def __str__(self):
+        return f"{self.group_id}-{self.invited_email}"

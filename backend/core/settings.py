@@ -25,8 +25,9 @@ SECRET_KEY = "django-insecure-c(6!hm5f7x-a8+hg-qf5p=m&*j+aydt^a#r+i76ac#b+e*6f(z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64"]
 
+HOST_DOMAIN = "http://127.0.0.1:8000"
 
 # Application definition
 
@@ -61,11 +62,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
+import os
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -82,7 +84,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-import os
 
 DATABASES = {
     "default": {
@@ -158,8 +159,8 @@ from datetime import timedelta
 # SIMPLE JWT CONF
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ["Bearer"],
-    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=2),
-    "REFRESH_TOKEN_LIFETIME": timedelta(seconds=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=7),
     # "SIGNING_KEY": SECRET_KEY,
 }
 
@@ -175,3 +176,12 @@ CSRF_COOKIE_SAMESITE = "None"
 
 SESSION_COOKIE_SECURE = False  # For development (True in production with HTTPS)
 CSRF_COOKIE_SECURE = False  # For development (True in production with HTTPS)
+
+
+# SETTING FOR AUTOMATIC EMAIL FOR EMAIL Notification to user
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "codexz.bsnt@gmail.com"
+EMAIL_HOST_PASSWORD = "hobylcqoxrpagolm"
