@@ -135,12 +135,14 @@ class InvitationView(APIView):
             return response
 
     def send_invitation(self, invitation_details, group):
+        HOST_DOMAIN = settings.HOST_DOMAIN
         subject = f"You're invited to join {group} on Splitzy!"
         invited_email = invitation_details.get("invited_email")
+        token = invitation_details.get("token")
         context = {
             "invited_email": invited_email,
             "group_name": group,
-            "invitation_link": "https://google.com",
+            "invitation_link": f"{HOST_DOMAIN}/api/groups/join/?token={token}",
             "invited_by": "admin",  # replace it with invited_by_user
             "expiration_days": 7,  # adjust as needed
             "logo_url": "https://your-domain.com/static/splitzy-logo.png",
