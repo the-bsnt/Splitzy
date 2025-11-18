@@ -44,4 +44,4 @@ class Invitation(models.Model):
     status = models.CharField(max_length=1, choices=STATUS, default="P")
 
     def __str__(self):
-        return f"{self.group_id}-{self.invited_email}"
+        return f"{self.group_id}-{self.invited_email}-{self.status}"

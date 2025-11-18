@@ -167,6 +167,8 @@ class InvitationView(APIView):
 
 
 class AcceptInvitationView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         token = request.GET.get("token")
         if not token:
@@ -176,6 +178,11 @@ class AcceptInvitationView(APIView):
             )
         try:
             invitation_instance = Invitation.objects.get(token=token)
+            if invitation_instance.status == "E":
+                return Response(
+                    {"detail": "Sorry, Token is expired"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         except Invitation.DoesNotExist:
             return Response(
                 {"detail": "Token not valid"}, status=status.HTTP_401_UNAUTHORIZED
@@ -188,14 +195,30 @@ class AcceptInvitationView(APIView):
         User = get_user_model()
         user = User.objects.filter(email=email).first()
 
-        # if user is not registered yet
         if not user:
             return Response(
-                {"detail": "User have to be registered"},
+                {"detail": "Invited email is not registered"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "Login or register to accept invitation"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-        # but i can check user is registered or not before sending invitaiton.
+        if request.user != user:
+            return Response(
+                {"detail": "You cannot accept invitation for another user"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
-        # if user is already registered into the system but not authenticated.
-        if user.is_authenticated:
-            pass
+        with transaction.atomic():
+            member = get_object_or_404(Membership, group_id=group.id, email=email)
+            member.user_id = user
+            member.verified = True
+            member.save()
+            invitation_instance.status = "A"
+            invitation_instance.save()
+
+            return Response(
+                {"detail": "Invitation accepted by user."}, status=status.HTTP_200_OK
+            )

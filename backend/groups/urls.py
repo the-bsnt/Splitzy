@@ -6,6 +6,7 @@ from .views import (
     MembersListCreateView,
     MembersDetailView,
     InvitationView,
+    AcceptInvitationView,
 )
 
 app_name = "groups"
@@ -27,5 +28,5 @@ urlpatterns = [
         InvitationView.as_view(),
         name="invite",
     ),
-    # path("join/", AcceptInvitationView.as_view(), name="accept-invitation"),
+    path("join/", AcceptInvitationView.as_view(), name="accept-invitation"),
 ]
