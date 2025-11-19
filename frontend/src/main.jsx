@@ -8,12 +8,9 @@ import {
   Route,
 } from "react-router-dom";
 import Home from "./pages/Home";
-// import Signup from "./pages/Signup";
-import Signup from "./pages/Signup2";
-// import Login from "./pages/Login";
-import Login from "./pages/Login2";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-// import AcceptInvitation from "./pages/InvitationAcceptance";
 import AcceptInvitation from "./pages/AcceptInvitation";
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -21,7 +18,6 @@ const router = createBrowserRouter(
       <Route path="" element={<Home />} />
       <Route path="signup" element={<Signup />} />
       <Route path="login" element={<Login />} />
-      {/* <Route path="login" element={<Login2 />} /> */}
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="accept-invitation" element={<AcceptInvitation />} />
     </Route>

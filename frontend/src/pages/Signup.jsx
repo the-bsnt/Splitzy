@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, User, Lock, ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
 import { authService } from "../services/authService";
 import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+  const prefilledEmail = searchParams.get("email");
+
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: prefilledEmail || "",
     password: "",
     password2: "",
   });
-  useRedirectIfLoggedIn();
+
+  useRedirectIfLoggedIn(redirectUrl);
+
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -52,7 +58,6 @@ export default function SignUp() {
       [name]: value,
     });
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -71,7 +76,6 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Mark all fields as touched
     setTouched({
       name: true,
       email: true,
@@ -81,24 +85,25 @@ export default function SignUp() {
 
     const isValid = validate();
     if (isValid) {
-      const { password2, ...submitData } = formData; // to eradicate password2 from formData and put rest or submitData
+      const { password2, ...submitData } = formData;
 
       try {
         const response = await authService.signup(submitData);
-
         localStorage.setItem("access", response.data.access);
-        navigate("/dashboard");
+
+        // Redirect to the specified URL or dashboard
+        if (redirectUrl) {
+          navigate(redirectUrl);
+        } else {
+          navigate("/dashboard");
+        }
       } catch (err) {
-        // Check if it's an HTTP error with a response
         if (err.response) {
           const status = err.response.status;
           const errorData = err.response.data;
 
           if (status === 400) {
-            // Django REST Framework sends field-level errors like:
-            // { "email": ["user with this email already exists."] }
             if (typeof errorData === "object") {
-              // Example: extract first message for each field
               const formattedErrors = {};
 
               for (const [field, messages] of Object.entries(errorData)) {
@@ -107,18 +112,14 @@ export default function SignUp() {
                   : messages;
               }
 
-              // Set to state for display in UI
               setErrors(formattedErrors);
             } else {
-              // Unexpected format
               setErrors({ general: "Something went wrong." });
             }
           } else {
-            // Non-400 errors (e.g., 500)
             setErrors({ general: "Server error. Please try again later." });
           }
         } else {
-          // Network or unknown error
           setErrors({ general: "Network error. Check your connection." });
         }
       }
@@ -126,12 +127,10 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
         <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
-
-        <div className="space-x-3"></div>
       </nav>
 
       {/* Sign Up Form */}
@@ -144,9 +143,28 @@ export default function SignUp() {
             <p className="text-gray-600">
               Join Splitzy and start managing expenses
             </p>
+            {redirectUrl && (
+              <p className="text-sm text-indigo-600 mt-2">
+                Create an account to continue
+              </p>
+            )}
+            {prefilledEmail && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mt-3">
+                <p className="text-sm text-indigo-700">
+                  You've been invited to join a group!
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-5">
+            {/* General Error */}
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+
             {/* Name Input */}
             <div>
               <label
@@ -195,7 +213,10 @@ export default function SignUp() {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   placeholder="Enter your email"
+                  disabled={!!prefilledEmail}
                   className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
+                    prefilledEmail ? "bg-gray-50 cursor-not-allowed" : ""
+                  } ${
                     errors.email && touched.email
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-indigo-600 focus:border-transparent"
@@ -263,7 +284,11 @@ export default function SignUp() {
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={
+                redirectUrl
+                  ? `/login?redirect=${encodeURIComponent(redirectUrl)}`
+                  : "/login"
+              }
               className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
               Log in
