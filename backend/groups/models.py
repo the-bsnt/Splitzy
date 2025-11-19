@@ -22,7 +22,7 @@ class Membership(models.Model):
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
     user_id = models.ForeignKey(
         CustomUser, null=True, blank=True, on_delete=models.CASCADE
-    )
+    )  # if verified user is deleted (set user deleted) then memeber is also delete (fix this if you require : this is remainder only)
     verified = models.BooleanField(default=False)
     # @property
     # def verified(self):

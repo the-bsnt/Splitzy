@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.contrib.auth import get_user_model
 
+from .invitation_authentication import InvitationAuthentication
 from .models import Groups, Membership, Invitation
 from .serializers import GroupsSerializer, MembershipSerializer, InvitationSerializer
 import secrets
@@ -123,7 +124,6 @@ class InvitationView(APIView):
             "group_id": group.id,
             "token": token,
         }
-
         serializer = InvitationSerializer(data=invitation)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -150,7 +150,6 @@ class InvitationView(APIView):
         }
         html_message = render_to_string("invitation_email.html", context)
         plain_message = strip_tags(html_message)
-
         try:
             # use celery and redis for to make email async and fast
             send_mail(
@@ -161,7 +160,6 @@ class InvitationView(APIView):
                 html_message=html_message,
                 fail_silently=False,
             )
-
         except Exception as e:
             return Response({"detail": str(e)})
 
@@ -169,48 +167,67 @@ class InvitationView(APIView):
 class AcceptInvitationView(APIView):
     permission_classes = [AllowAny]
 
+    authentication_classes = [InvitationAuthentication]
+
     def post(self, request, *args, **kwargs):
         token = request.GET.get("token")
+        print(token)
         if not token:
             return Response(
-                {"detail": "Invitation token is required."},
+                {"code": "A", "detail": "Invitation token is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             invitation_instance = Invitation.objects.get(token=token)
             if invitation_instance.status == "E":
                 return Response(
-                    {"detail": "Sorry, Token is expired"},
+                    {"code": "B", "detail": "Sorry, Token is expired"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if invitation_instance.status == "A":
+                return Response(
+                    {
+                        "code": "C",
+                        "detail": "Sorry, Invitation is already accepted. Link is expired.",
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         except Invitation.DoesNotExist:
             return Response(
-                {"detail": "Token not valid"}, status=status.HTTP_401_UNAUTHORIZED
+                {"code": "D", "detail": "Token not valid"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
-
         group = invitation_instance.group_id
         email = invitation_instance.invited_email
-
         # check user is already in the system or not
         User = get_user_model()
         user = User.objects.filter(email=email).first()
-
         if not user:
             return Response(
-                {"detail": "Invited email is not registered"},
+                {
+                    "code": "REGISTER_REQUIRED",
+                    "detail": "Invited email is not registered. Please sign up.",
+                    "invited_email": email,
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if not request.user.is_authenticated:
             return Response(
-                {"detail": "Login or register to accept invitation"},
+                {
+                    "code": "AUTH_REQUIRED",
+                    "detail": "Login or register to accept invitation.",
+                },
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         if request.user != user:
             return Response(
-                {"detail": "You cannot accept invitation for another user"},
+                {
+                    "code": "WRONG_USER",
+                    "detail": "You are logged in with another account. Logout and login with the invited email.",
+                    "invited_email": email,
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
-
         with transaction.atomic():
             member = get_object_or_404(Membership, group_id=group.id, email=email)
             member.user_id = user
@@ -218,7 +235,10 @@ class AcceptInvitationView(APIView):
             member.save()
             invitation_instance.status = "A"
             invitation_instance.save()
-
             return Response(
-                {"detail": "Invitation accepted by user."}, status=status.HTTP_200_OK
+                {
+                    "code": "SUCCESS",
+                    "detail": "Invitation accepted successfully.",
+                },
+                status=status.HTTP_200_OK,
             )
