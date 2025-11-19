@@ -25,9 +25,9 @@ SECRET_KEY = "django-insecure-c(6!hm5f7x-a8+hg-qf5p=m&*j+aydt^a#r+i76ac#b+e*6f(z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64"]
 
-
+HOST_DOMAIN = "http://127.0.0.1:8000"  # hard coded add this in .env file
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "corsheaders",
     # custom apps
     "users",
+    "groups",
+    "expenses",
 ]
 
 MIDDLEWARE = [
@@ -59,11 +61,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
+import os
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -80,7 +83,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-import os
 
 DATABASES = {
     "default": {
@@ -156,9 +158,29 @@ from datetime import timedelta
 # SIMPLE JWT CONF
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ["Bearer"],
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=60),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=7),
     # "SIGNING_KEY": SECRET_KEY,
 }
 
 CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# Required for sending cookies from backend -> frontend on different domains
+SESSION_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_SAMESITE = "None"
+
+SESSION_COOKIE_SECURE = False  # For development (True in production with HTTPS)
+CSRF_COOKIE_SECURE = False  # For development (True in production with HTTPS)
+
+
+# SETTING FOR AUTOMATIC EMAIL FOR EMAIL Notification to user
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")

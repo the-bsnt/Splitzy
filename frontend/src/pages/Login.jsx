@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PasswordField from "../components/PasswordField";
 import Button from "../components/Button";
+import { authService } from "../services/authService";
+import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+
+  useRedirectIfLoggedIn(redirectUrl);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -39,7 +47,6 @@ export default function Login() {
       [name]: value,
     });
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
         ...errors,
@@ -55,7 +62,7 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched({
       email: true,
@@ -64,13 +71,27 @@ export default function Login() {
 
     const isValid = validate();
     if (isValid) {
-      console.log("Login submitted:", formData);
-      // Add your login logic here
+      try {
+        localStorage.removeItem("access");
+        const response = await authService.login(formData);
+        localStorage.setItem("access", response.data.access);
+
+        // Redirect to the specified URL or dashboard
+        if (redirectUrl) {
+          navigate(redirectUrl);
+        } else {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        setErrors({
+          general: "Invalid email or password. Please try again.",
+        });
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
         <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
@@ -89,9 +110,21 @@ export default function Login() {
               Welcome Back
             </h2>
             <p className="text-gray-600">Log in to manage your expenses</p>
+            {redirectUrl && (
+              <p className="text-sm text-indigo-600 mt-2">
+                Please log in to continue
+              </p>
+            )}
           </div>
 
           <div className="space-y-5">
+            {/* General Error */}
+            {errors.general && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+
             {/* Email Input */}
             <div>
               <label
@@ -173,7 +206,11 @@ export default function Login() {
           <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{" "}
             <Link
-              to="/signup"
+              to={
+                redirectUrl
+                  ? `/signup?redirect=${encodeURIComponent(redirectUrl)}`
+                  : "/signup"
+              }
               className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
               Sign up
@@ -188,7 +225,7 @@ export default function Login() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-linear-to-br from-indigo-100 via-white to-purple-100 text-gray-500">
+              <span className="px-4 bg-gradient-to-br from-indigo-100 via-white to-purple-100 text-gray-500">
                 Or continue with
               </span>
             </div>
