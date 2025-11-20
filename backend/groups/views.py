@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
@@ -16,6 +16,7 @@ from .invitation_authentication import InvitationAuthentication
 from .models import Groups, Membership, Invitation
 from .serializers import GroupsSerializer, MembershipSerializer, InvitationSerializer
 import secrets
+from .permissions import IsGroupAdmin, IsGroupMember, IsSelfOrAdmin
 
 
 class GroupListCreateView(
@@ -46,11 +47,16 @@ class GroupDetailView(
 ):
     queryset = Groups.objects.all()
     serializer_class = GroupsSerializer
+    permission_classes = [IsAuthenticated, IsGroupAdmin]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated(), IsGroupMember()]
+        return super().get_permissions()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
-    # make updatable only by admin
     def put(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
@@ -58,7 +64,6 @@ class GroupDetailView(
         return self.partial_update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        # make deletable onnly by admin
         return self.destroy(request, *args, **kwargs)
 
 
@@ -67,6 +72,12 @@ class MembersListCreateView(
 ):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
+    permission_classes = [IsAuthenticated, IsGroupAdmin]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated(), IsGroupMember()]
+        return super().get_permissions()
 
     def get_queryset(self):
         group_id = self.kwargs.get("pk")
@@ -93,6 +104,14 @@ class MembersDetailView(
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
     lookup_field = "id"
+    permission_classes = [IsAuthenticated, IsGroupAdmin]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated(), IsGroupMember()]
+        if self.request.method == "PUT" or self.request.method == "PATCH":
+            return [IsAuthenticated(), IsSelfOrAdmin()]
+        return super().get_permissions()
 
     def get_queryset(self):
         return super().get_queryset()
@@ -232,6 +251,8 @@ class AcceptInvitationView(APIView):
             member = get_object_or_404(Membership, group_id=group.id, email=email)
             member.user_id = user
             member.verified = True
+            if not member.name:
+                member.name = user.name
             member.save()
             invitation_instance.status = "A"
             invitation_instance.save()
