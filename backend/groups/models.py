@@ -29,7 +29,7 @@ class Membership(models.Model):
     #     if self.user_id is not
 
     def __str__(self):
-        return f"{self.group_id.name}-{self.email}"
+        return f"{self.email}|G={self.group_id.name}"
 
 
 class Invitation(models.Model):
