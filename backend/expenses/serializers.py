@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Expenses, ExpensesParticipants
+from .models import Expenses, ExpensesParticipants, ProposedSettlements, GroupBalances
 
 from groups.models import Groups, Membership
 from django.shortcuts import get_object_or_404
@@ -53,3 +53,26 @@ class ExpensesSerializer(serializers.ModelSerializer):
                 expense_instance.amount = total_paid
                 expense_instance.save()
         return expense_instance
+
+
+class ProposedSettlementsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProposedSettlements
+        fields = "__all__"
+
+
+class GroupBalancesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupBalances
+        fields = "__all__"
+
+    def create(self, validated_data):
+        group = validated_data.pop("group_id")
+        member = validated_data.pop("member_id")
+        balance_instance, created = GroupBalances.objects.get_or_create(
+            group_id=group, member_id=member, defaults={**validated_data}
+        )
+        if not created:
+            balance_instance.balance += validated_data.get("balance")
+        balance_instance.save()
+        return balance_instance

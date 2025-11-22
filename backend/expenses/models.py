@@ -23,29 +23,41 @@ class ExpensesParticipants(models.Model):
     paid_amt = models.FloatField(default=0.00)
 
     def __str__(self):
-        return f"{self.expense_id.title}-{self.member_id}-share={self.share}"
+        return f"{self.expense_id.title}-{self.member_id}-share={self.paid_amt}"
 
-    # edit the model to make split with percentage. for now split is equal
-
-
-# class Transactions(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-#     debtor = models.ForeignKey(
-#         Membership, on_delete=models.CASCADE, related_name="debtor_transactions"
-#     )
-#     creditor = models.ForeignKey(
-#         Membership, on_delete=models.CASCADE, related_name="creditor_transactions"
-#     )
-#     payment = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
-
-#     def __str__(self):
-#         return f"from {self.debtor} to {self.creditor} : Amt = {self.payment}"
+    # edit the model to make split with percentage. for now split is equal here
 
 
-# Debtor (Owes): The person who is expected to pay the money.
+class ProposedSettlements(models.Model):
+    """
+    Model to record expected transactions as result of any expense.
+    """
 
-# Creditor (Is Owed): The person who is expected to receive the money.
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    expense_id = models.ForeignKey(Expenses, on_delete=models.CASCADE)
+    debtor = models.ForeignKey(
+        Membership, on_delete=models.CASCADE, related_name="payer"
+    )
+    creditor = models.ForeignKey(
+        Membership, on_delete=models.CASCADE, related_name="receiver"
+    )
+    payment = models.FloatField(default=0.0)
 
-# payment -> positive : debitor has to pay to creditor;
-# payment -> negative : debitor has over paid to creditor; so creditor have pay that amount to creditor to settle up.;
-# payment -> 0 means settled
+    def __str__(self):
+        return f" {self.debtor} ---> {self.creditor} || Amt = {self.payment}"
+
+    """
+    Debtor (Owes): The person who is expected to pay the money.
+    Creditor (Is Owed): The person who is expected to receive the money.
+    payment -> positive : debitor has to pay to creditor;
+    """
+
+
+class GroupBalances(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
+    member_id = models.ForeignKey(Membership, on_delete=models.CASCADE)
+    balance = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return f"G={self.group_id}|{self.member_id} --> {self.balance}"
