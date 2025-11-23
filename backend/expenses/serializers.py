@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Expenses, ExpensesParticipants, ProposedSettlements, GroupBalances
+from .models import Expenses, ExpensesParticipants, TransactionRecords, GroupBalances
 
 from groups.models import Groups, Membership
 from django.shortcuts import get_object_or_404
@@ -55,10 +55,15 @@ class ExpensesSerializer(serializers.ModelSerializer):
         return expense_instance
 
 
-class ProposedSettlementsSerializer(serializers.ModelSerializer):
+class TransactionRecordsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProposedSettlements
+        model = TransactionRecords
         fields = "__all__"
+
+    def validate(self, attrs):
+        if attrs.get("payment") == 0:
+            raise serializers.ValidationError("You cannot record payment 0")
+        return super().validate(attrs)
 
 
 class GroupBalancesSerializer(serializers.ModelSerializer):
@@ -76,3 +81,16 @@ class GroupBalancesSerializer(serializers.ModelSerializer):
             balance_instance.balance += validated_data.get("balance")
         balance_instance.save()
         return balance_instance
+
+
+class RecordPaymentSerializer(serializers.Serializer):
+    debtor = serializers.EmailField()  # payer
+    creditor = serializers.EmailField()  # receiver
+    payment = serializers.FloatField()
+
+    def validate(self, attrs):
+        if attrs.get("payment") <= 0:
+            raise serializers.ValidationError(
+                {"payment": "Payment amount must be greater than 0."}
+            )
+        return super().validate(attrs)

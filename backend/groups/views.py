@@ -133,6 +133,7 @@ class MembersDetailView(
 
 
 class InvitationView(APIView):
+    # set_permissions
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         member = get_object_or_404(Membership, id=kwargs.get("id"))
