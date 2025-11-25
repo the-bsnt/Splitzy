@@ -17,8 +17,20 @@ class ExpensesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expenses
-        fields = ["title", "description", "paid_by", "amount", "participants"]
-        extra_kwargs = {"description": {"required": False}}
+        fields = [
+            "id",
+            "title",
+            "description",
+            "paid_by",
+            "amount",
+            "participants",
+            "created_at",
+        ]
+        extra_kwargs = {
+            "description": {"required": False},
+            "id": {"read_only": True},
+            "created_at": {"read_only": True},
+        }
 
     def validate(self, attrs):
         # to retrive group_id
@@ -34,6 +46,11 @@ class ExpensesSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         "Given Member Id is not a valid membership or is not a member of this group."
                     )
+        amt = attrs.get("amount")
+
+        if amt is not None:
+            if amt <= 0:
+                raise serializers.ValidationError("Amount must be greater than zero.")
         return super().validate(attrs)
 
     def create(self, validated_data):
@@ -53,6 +70,26 @@ class ExpensesSerializer(serializers.ModelSerializer):
                 expense_instance.amount = total_paid
                 expense_instance.save()
         return expense_instance
+
+
+class ExpensesDetailSerializer(serializers.ModelSerializer):
+
+    participants = ExpensesParticipantsSerializer(
+        many=True, source="expensesparticipants_set"
+    )
+
+    class Meta:
+        model = Expenses
+        fields = [
+            "id",
+            "group_id",
+            "title",
+            "description",
+            "paid_by",
+            "amount",
+            "created_at",
+            "participants",
+        ]
 
 
 class TransactionRecordsSerializer(serializers.ModelSerializer):
@@ -84,8 +121,8 @@ class GroupBalancesSerializer(serializers.ModelSerializer):
 
 
 class RecordPaymentSerializer(serializers.Serializer):
-    debtor = serializers.EmailField()  # payer
-    creditor = serializers.EmailField()  # receiver
+    debtor = serializers.UUIDField()  # payer
+    creditor = serializers.UUIDField()  # receiver
     payment = serializers.FloatField()
 
     def validate(self, attrs):

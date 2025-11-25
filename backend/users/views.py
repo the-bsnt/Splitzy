@@ -125,6 +125,7 @@ class ProfileView(
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
+    # make user detials editable
     def patch(self, request, *args, **kwargs):
         pass
 

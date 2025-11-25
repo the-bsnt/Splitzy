@@ -3,7 +3,7 @@ from rest_framework import generics, mixins
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -17,6 +17,7 @@ from .models import Groups, Membership, Invitation
 from .serializers import GroupsSerializer, MembershipSerializer, InvitationSerializer
 import secrets
 from .permissions import IsGroupAdmin, IsGroupMember, IsSelfOrAdmin
+from expenses.models import GroupBalances
 
 
 class GroupListCreateView(
@@ -65,6 +66,14 @@ class GroupDetailView(
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        un_settled_group = GroupBalances.objects.filter(group_id=instance).exclude(
+            balance=0
+        )
+        if un_settled_group.exists():
+            raise PermissionDenied("The Group is not settled yet")
+        return super().perform_destroy(instance)
 
 
 class MembersListCreateView(
@@ -143,6 +152,7 @@ class InvitationView(APIView):
             "invited_email": member.email,
             "group_id": group.id,
             "token": token,
+            "invited_by": request.user.email,
         }
         serializer = InvitationSerializer(data=invitation)
         if serializer.is_valid(raise_exception=True):
@@ -156,16 +166,18 @@ class InvitationView(APIView):
 
     def send_invitation(self, invitation_details, group):
         HOST_DOMAIN = settings.HOST_DOMAIN
+        CLIENT_DOMAIN = settings.CLIENT_DOMAIN
         subject = f"You're invited to join {group} on Splitzy!"
         invited_email = invitation_details.get("invited_email")
+        invited_by = invitation_details.get("invited_by")
         token = invitation_details.get("token")
         context = {
             "invited_email": invited_email,
             "group_name": group,
-            "invitation_link": f"{HOST_DOMAIN}/api/groups/join/?token={token}",
-            "invited_by": "admin",  # replace it with invited_by_user
+            "invitation_link": f"{CLIENT_DOMAIN}/accept-invitation/?token={token}",
+            "invited_by": invited_by,  # replace it with invited_by_user
             "expiration_days": 7,  # adjust as needed
-            "logo_url": "https://your-domain.com/static/splitzy-logo.png",
+            "logo_url": f"{CLIENT_DOMAIN}/public/logo",
             "support_link": "https://your-domain.com/support",
         }
         html_message = render_to_string("invitation_email.html", context)
@@ -189,6 +201,7 @@ class AcceptInvitationView(APIView):
 
     authentication_classes = [InvitationAuthentication]
 
+    # code A,B,C... is just for testing you can remove it.
     def post(self, request, *args, **kwargs):
         token = request.GET.get("token")
         print(token)
