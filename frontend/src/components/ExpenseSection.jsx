@@ -355,6 +355,7 @@ const ExpenseSection = ({
                     step="0.01"
                     placeholder="0.00"
                     value={newExpense.amount}
+                    onWheel={(e) => e.target.blur()}
                     onChange={(e) =>
                       setNewExpense({ ...newExpense, amount: e.target.value })
                     }
@@ -382,6 +383,7 @@ const ExpenseSection = ({
                       step="0.01"
                       placeholder="0.00"
                       value={newExpense.amount}
+                      onWheel={(e) => e.target.blur()}
                       onChange={(e) =>
                         setNewExpense({ ...newExpense, amount: e.target.value })
                       }

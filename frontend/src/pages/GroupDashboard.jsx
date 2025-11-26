@@ -354,6 +354,7 @@ const GroupDashboard = () => {
                 onUpdateGroup={setCurrentGroup}
                 onRefresh={loadGroupData}
                 isAdmin={isAdmin}
+                currentGroup={currentGroup}
               />
             )}
           </div>
