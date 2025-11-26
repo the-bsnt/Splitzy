@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 import { groupService } from "../services/groupService";
-
-const GroupSettingsSection = ({ group, members, onUpdateGroup, onRefresh }) => {
+import { LucideTrash2 } from "lucide-react";
+import TransferAdmin from "./TransferAdmin";
+import { useNavigate } from "react-router-dom";
+const GroupSettingsSection = ({
+  group,
+  members,
+  onUpdateGroup,
+  onRefresh,
+  isAdmin,
+  currentGroup,
+}) => {
   const [editingGroup, setEditingGroup] = useState(false);
   const [groupForm, setGroupForm] = useState({
     name: group?.name || "",
     description: group?.description || "",
+    admin: group?.admin || "",
   });
 
-  const isAdmin = true; // Replace with actual admin check
-
+  const navigate = useNavigate();
   const handleUpdateGroup = async (e) => {
     e.preventDefault();
     try {
@@ -20,7 +29,15 @@ const GroupSettingsSection = ({ group, members, onUpdateGroup, onRefresh }) => {
       console.error("Error updating group:", error);
     }
   };
-
+  const handleDeleteGroup = async () => {
+    if (window.confirm("Are you sure you want to delete this group?")) {
+      try {
+        await groupService.deleteGroup(group.id);
+      } catch (error) {
+        console.error("Error deleting group:", error);
+      }
+    }
+  };
   const handleRemoveMember = async (memberId) => {
     if (window.confirm("Are you sure you want to remove this member?")) {
       try {
@@ -66,41 +83,43 @@ const GroupSettingsSection = ({ group, members, onUpdateGroup, onRefresh }) => {
         </div>
 
         {editingGroup ? (
-          <form onSubmit={handleUpdateGroup} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Group Name
-              </label>
-              <input
-                type="text"
-                value={groupForm.name}
-                onChange={(e) =>
-                  setGroupForm({ ...groupForm, name: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={groupForm.description}
-                onChange={(e) =>
-                  setGroupForm({ ...groupForm, description: e.target.value })
-                }
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Save Changes
-            </button>
-          </form>
+          <div>
+            <form onSubmit={handleUpdateGroup} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Group Name
+                </label>
+                <input
+                  type="text"
+                  value={groupForm.name}
+                  onChange={(e) =>
+                    setGroupForm({ ...groupForm, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={groupForm.description}
+                  onChange={(e) =>
+                    setGroupForm({ ...groupForm, description: e.target.value })
+                  }
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save Changes
+              </button>
+            </form>
+          </div>
         ) : (
           <div className="space-y-2">
             <p>
@@ -113,32 +132,59 @@ const GroupSettingsSection = ({ group, members, onUpdateGroup, onRefresh }) => {
           </div>
         )}
       </div>
-
+      {/* Transfer Admin */}
+      <TransferAdmin
+        groupForm={groupForm}
+        setGroupForm={setGroupForm}
+        groupMembers={members}
+        currentUser={group?.admin} // current admin user ID
+        group={group} // current group
+      />
+      {/* Delete Group */}
+      <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
+        <h3 className="text-lg font-medium text-red-800 mb-2">Delete Group</h3>
+        <p className="text-sm text-red-600 mb-3">
+          Once you delete a group, there is no going back. Please be certain.
+        </p>
+        <button
+          type="button"
+          onClick={async () => {
+            await handleDeleteGroup();
+            navigate("/dashboard");
+          }}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+        >
+          Delete Group
+        </button>
+      </div>
       {/* Manage Members */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Manage Members
         </h3>
         <div className="space-y-3">
-          {members.map((member) => (
-            <div
-              key={member.id}
-              className="flex justify-between items-center p-3 border border-gray-200 rounded-lg"
-            >
-              <div>
-                <div className="font-medium text-gray-900">
-                  {member.name || "No Name"}
-                </div>
-                <div className="text-sm text-gray-500">{member.email}</div>
-              </div>
-              <button
-                onClick={() => handleRemoveMember(member.id)}
-                className="text-red-600 hover:text-red-700 transition-colors"
+          {members
+            .filter((member) => currentGroup.admin !== member.user_id)
+            .map((member) => (
+              <div
+                key={member.id}
+                className="flex justify-between items-center p-3 border border-gray-200 rounded-lg"
               >
-                Remove
-              </button>
-            </div>
-          ))}
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {member.name || "No Name"}
+                  </div>
+                  <div className="text-sm text-gray-500">{member.email}</div>
+                </div>
+                <button
+                  onClick={() => handleRemoveMember(member.id)}
+                  className="text-red-600 hover:text-red-700 transition-colors"
+                  style={{ cursor: "pointer" }}
+                >
+                  <LucideTrash2 />
+                </button>
+              </div>
+            ))}
         </div>
       </div>
     </div>

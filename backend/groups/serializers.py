@@ -10,7 +10,8 @@ class GroupsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Groups
         fields = "__all__"
-        read_only_fields = ["admin", "created_at"]
+        read_only_fields = ["created_at"]
+        extra_kwargs = {"admin": {"required": False}}
 
     def validate(self, validated_data):
         request = self.context.get("request")

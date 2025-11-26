@@ -25,11 +25,13 @@ class ExpensesSerializer(serializers.ModelSerializer):
             "amount",
             "participants",
             "created_at",
+            "group_id",
         ]
         extra_kwargs = {
             "description": {"required": False},
             "id": {"read_only": True},
             "created_at": {"read_only": True},
+            "group_id": {"read_only": True},
         }
 
     def validate(self, attrs):
@@ -37,6 +39,13 @@ class ExpensesSerializer(serializers.ModelSerializer):
         group_id = self.context.get("view").kwargs.get("pk")
         group = get_object_or_404(Groups, id=group_id)
         attrs["group_id"] = group
+        if Expenses.objects.filter(
+            group_id=group.id, title=attrs.get("title")
+        ).exists():
+            raise serializers.ValidationError(
+                "Expense with given title already exists in the group"
+            )
+
         participants = attrs.get("participants", [])
         if participants:
             for each in participants:

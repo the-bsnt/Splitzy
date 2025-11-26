@@ -7,7 +7,7 @@ class Expenses(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
     paid_by = models.ForeignKey(Membership, on_delete=models.CASCADE)
-    title = models.CharField(max_length=50, unique=True)
+    title = models.CharField(max_length=50)
     description = models.TextField(blank=True, default="")
     amount = models.FloatField(default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)

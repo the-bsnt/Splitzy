@@ -81,12 +81,12 @@ class MembersListCreateView(
 ):
     queryset = Membership.objects.all()
     serializer_class = MembershipSerializer
-    permission_classes = [IsAuthenticated, IsGroupAdmin]
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
-    def get_permissions(self):
-        if self.request.method == "GET":
-            return [IsAuthenticated(), IsGroupMember()]
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.request.method == "GET":
+    #         return [IsAuthenticated(), IsGroupMember()]
+    #     return super().get_permissions()
 
     def get_queryset(self):
         group_id = self.kwargs.get("pk")
@@ -138,6 +138,12 @@ class MembersDetailView(
         member = get_object_or_404(Membership, id=kwargs.get("id"))
         if member.user_id == member.group_id.admin:
             raise ValidationError("Admin can not be deleted. To delete Transfer Admin.")
+        balance_obj = GroupBalances.objects.filter(
+            group_id=member.group_id, member_id=member.id
+        ).first()
+        if balance_obj and balance_obj.balance != 0:
+            raise ValidationError("Member cannot be deleted unless settled")
+
         return self.destroy(request, *args, **kwargs)
 
 
