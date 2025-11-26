@@ -6,15 +6,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from groups.models import Groups
+from groups.models import Groups, Membership
 
 from .models import Expenses, ExpensesParticipants, GroupBalances
 from .serializers import (
     ExpensesSerializer,
-    ExpensesParticipantsSerializer,
-    ProposedSettlementsSerializer,
+    ExpensesDetailSerializer,
+    TransactionRecordsSerializer,
     GroupBalancesSerializer,
+    RecordPaymentSerializer,
 )
+
+from groups.permissions import IsGroupMember
 
 
 def min_cash_flow(balances):
@@ -64,11 +67,21 @@ def min_cash_flow(balances):
     return transactions
 
 
-class ExpensesView(generics.GenericAPIView, mixins.CreateModelMixin):
+class ExpensesView(
+    generics.GenericAPIView, mixins.CreateModelMixin, mixins.ListModelMixin
+):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesSerializer
     permission_classes = [AllowAny]
     authentication_classes = []
+
+    def get_queryset(self):
+        group_id = self.kwargs.get("pk")
+        qs = super().get_queryset()
+        return qs.filter(group_id=group_id)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -96,7 +109,7 @@ class ExpensesView(generics.GenericAPIView, mixins.CreateModelMixin):
         transactions = min_cash_flow(balances)
         for t in transactions:
             t["expense_id"] = expense_instance.id
-            settlement_serializer = ProposedSettlementsSerializer(data=t)
+            settlement_serializer = TransactionRecordsSerializer(data=t)
             if settlement_serializer.is_valid(raise_exception=True):
                 settlement_serializer.save()
 
@@ -110,7 +123,41 @@ class ExpensesView(generics.GenericAPIView, mixins.CreateModelMixin):
             # alternate plan we have balances;  contruct transction table for settlement each expense ; use same balance to update summary table; now extract balances from summary table, apply min_max and display to user
 
 
-class GroupBalanceView(APIView):
+class ExpenseDetailView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    queryset = Expenses.objects.all()
+    serializer_class = ExpensesDetailSerializer
+    lookup_field = "id"
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    queryset = GroupBalances.objects.all()
+    serializer_class = GroupBalancesSerializer
+
+    def get(self, request, *args, **kwargs):
+        response = self.list(request, *args, **kwargs)
+        if response.status_code == 200:
+            # balance is converted to string due to frontend issue
+            balance_list = [
+                {**b, "balance": str(round(b.get("balance"), 2))} for b in response.data
+            ]
+
+            return Response(balance_list, status=status.HTTP_200_OK)
+        return response
+
+    def get_queryset(self):
+        gid = self.kwargs.get("pk")
+        qs = super().get_queryset()
+        return qs.filter(group_id=gid)
+
+
+class SuggestedSettlementsView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
@@ -118,13 +165,63 @@ class GroupBalanceView(APIView):
         group_id = kwargs.get("pk")
         get_object_or_404(Groups, id=group_id)
         balance_qs = GroupBalances.objects.filter(group_id=group_id)
-        # balances_list = balance_qs.values("member_id", "balance")
-        # balances = {}
-        # for b in balances_list:
-        #     balances[b.get("member_id")] = b.get("balance")
-        balances = {obj.member_id.email: obj.balance for obj in balance_qs}
+        balances = {obj.member_id.id: obj.balance for obj in balance_qs}
         settlements = min_cash_flow(balances)
         return Response(settlements, status=status.HTTP_200_OK)
 
 
-# view to record actual payment to settle
+# view to record actual payment to settle:
+
+
+class RecordPaymentView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        group = get_object_or_404(Groups, id=kwargs.get("pk"))
+        serializer = RecordPaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payer = serializer.data.get("debtor")
+        receiver = serializer.data.get("creditor")
+        payment = serializer.data.get("payment")
+
+        # retrieve the payer and receiver membership ids
+        # try:
+        #     payer = group.membership_set.all().get(email=payer_email, group_id=group)
+        #     receiver = group.membership_set.all().get(
+        #         email=receiver_email, group_id=group
+        #     )
+        # except Membership.DoesNotExist:
+
+        #     raise ValueError("Payer or Receiver not found in this group")
+
+        # update transcation record table
+        t = {
+            "debtor": payer,
+            "creditor": receiver,
+            "payment": payment,
+            "type": "A",
+        }
+        transaction_serializer = TransactionRecordsSerializer(data=t)
+        transaction_serializer.is_valid(raise_exception=True)
+        transaction_serializer.save()
+
+        # update group balance table
+        record_list = [
+            {"group_id": group.id, "member_id": payer, "balance": payment},
+            {
+                "group_id": group.id,
+                "member_id": receiver,
+                "balance": -payment,
+            },
+        ]
+        for r in record_list:
+            balance_instance = GroupBalancesSerializer(data=r)
+            balance_instance.is_valid(raise_exception=True)
+            balance_instance.save()
+
+        return Response(
+            {"detail": "Payment Recorded Successfully"},
+            status=status.HTTP_200_OK,
+        )

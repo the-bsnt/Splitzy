@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Expenses, ExpensesParticipants, ProposedSettlements, GroupBalances
+from .models import Expenses, ExpensesParticipants, TransactionRecords, GroupBalances
 
 from groups.models import Groups, Membership
 from django.shortcuts import get_object_or_404
@@ -17,8 +17,20 @@ class ExpensesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expenses
-        fields = ["title", "description", "paid_by", "amount", "participants"]
-        extra_kwargs = {"description": {"required": False}}
+        fields = [
+            "id",
+            "title",
+            "description",
+            "paid_by",
+            "amount",
+            "participants",
+            "created_at",
+        ]
+        extra_kwargs = {
+            "description": {"required": False},
+            "id": {"read_only": True},
+            "created_at": {"read_only": True},
+        }
 
     def validate(self, attrs):
         # to retrive group_id
@@ -34,6 +46,11 @@ class ExpensesSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         "Given Member Id is not a valid membership or is not a member of this group."
                     )
+        amt = attrs.get("amount")
+
+        if amt is not None:
+            if amt <= 0:
+                raise serializers.ValidationError("Amount must be greater than zero.")
         return super().validate(attrs)
 
     def create(self, validated_data):
@@ -55,10 +72,35 @@ class ExpensesSerializer(serializers.ModelSerializer):
         return expense_instance
 
 
-class ProposedSettlementsSerializer(serializers.ModelSerializer):
+class ExpensesDetailSerializer(serializers.ModelSerializer):
+
+    participants = ExpensesParticipantsSerializer(
+        many=True, source="expensesparticipants_set"
+    )
+
     class Meta:
-        model = ProposedSettlements
+        model = Expenses
+        fields = [
+            "id",
+            "group_id",
+            "title",
+            "description",
+            "paid_by",
+            "amount",
+            "created_at",
+            "participants",
+        ]
+
+
+class TransactionRecordsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransactionRecords
         fields = "__all__"
+
+    def validate(self, attrs):
+        if attrs.get("payment") == 0:
+            raise serializers.ValidationError("You cannot record payment 0")
+        return super().validate(attrs)
 
 
 class GroupBalancesSerializer(serializers.ModelSerializer):
@@ -76,3 +118,16 @@ class GroupBalancesSerializer(serializers.ModelSerializer):
             balance_instance.balance += validated_data.get("balance")
         balance_instance.save()
         return balance_instance
+
+
+class RecordPaymentSerializer(serializers.Serializer):
+    debtor = serializers.UUIDField()  # payer
+    creditor = serializers.UUIDField()  # receiver
+    payment = serializers.FloatField()
+
+    def validate(self, attrs):
+        if attrs.get("payment") <= 0:
+            raise serializers.ValidationError(
+                {"payment": "Payment amount must be greater than 0."}
+            )
+        return super().validate(attrs)

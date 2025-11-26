@@ -28,13 +28,16 @@ class ExpensesParticipants(models.Model):
     # edit the model to make split with percentage. for now split is equal here
 
 
-class ProposedSettlements(models.Model):
+class TransactionRecords(models.Model):
     """
     Model to record expected transactions as result of any expense.
     """
 
+    TYPE = [("P", "Proposed"), ("A", "Actual")]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    expense_id = models.ForeignKey(Expenses, on_delete=models.CASCADE)
+    expense_id = models.ForeignKey(
+        Expenses, on_delete=models.CASCADE, null=True, blank=True
+    )
     debtor = models.ForeignKey(
         Membership, on_delete=models.CASCADE, related_name="payer"
     )
@@ -42,6 +45,10 @@ class ProposedSettlements(models.Model):
         Membership, on_delete=models.CASCADE, related_name="receiver"
     )
     payment = models.FloatField(default=0.0)
+    type = models.CharField(max_length=1, choices=TYPE, default="P", null=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, null=True
+    )  # remove null after migration
 
     def __str__(self):
         return f" {self.debtor} ---> {self.creditor} || Amt = {self.payment}"
@@ -58,6 +65,10 @@ class GroupBalances(models.Model):
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
     member_id = models.ForeignKey(Membership, on_delete=models.CASCADE)
     balance = models.FloatField(default=0.0)
+
+    @property
+    def is_settled(self):
+        return self.balance == 0
 
     def __str__(self):
         return f"G={self.group_id}|{self.member_id} --> {self.balance}"

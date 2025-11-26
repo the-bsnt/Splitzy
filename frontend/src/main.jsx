@@ -12,6 +12,8 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import GroupDashboard from "./pages/GroupDashboard";
+import Logo from "./components/Logo";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route>
@@ -20,6 +22,8 @@ const router = createBrowserRouter(
       <Route path="login" element={<Login />} />
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="accept-invitation" element={<AcceptInvitation />} />
+      <Route path="group/:groupName" element={<GroupDashboard />} />
+      <Route path="public/logo" element={<Logo />} />
     </Route>
   )
 );
