@@ -146,14 +146,14 @@ const GroupDetailsSection = ({
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">Members</h3>
-          {isAdmin && (
+          {
             <Button
               onClick={() => setShowAddMember(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Add Member
             </Button>
-          )}
+          }
         </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto">

@@ -80,7 +80,6 @@ function Dashboard() {
       console.error("Logout failed", err);
     }
   };
-
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setPasswordError("");

@@ -9,13 +9,13 @@ import BalancesSection from "../components/BalancesSection";
 import GroupSettingsSection from "../components/GroupSettingsSection";
 import MemberDetailModal from "../components/MemberDetailModal";
 import Button from "../components/Button";
-import { DollarSign, Mail, Settings, User } from "lucide-react";
+import { DollarSign, Mail, Pointer, Settings, User } from "lucide-react";
 
 const GroupDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const groupId = location.state?.groupId;
-
+  const [isAdmin, setAdmin] = useState(false);
   const [currentGroup, setCurrentGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [expenses, setExpenses] = useState([]);
@@ -55,6 +55,15 @@ const GroupDashboard = () => {
     }
   }, [groupId, navigate]);
 
+  useEffect(() => {
+    if (currentUser && currentGroup) {
+      if (currentUser.id === currentGroup.admin) {
+        setAdmin(true);
+      } else {
+        setAdmin(false);
+      }
+    }
+  }, [currentUser, currentGroup]);
   const loadGroupData = async () => {
     try {
       setLoading(true);
@@ -93,7 +102,10 @@ const GroupDashboard = () => {
         expenseService.listExpense(groupId),
       ]);
 
-      setExpenses(expenseResponse.data);
+      const sorted_data = expenseResponse.data.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      setExpenses(sorted_data);
     } catch (err) {
       setError("Failed to load expense data");
     } finally {
@@ -148,6 +160,17 @@ const GroupDashboard = () => {
   const getMemberObject = function (mId) {
     return members.find((m) => m.id == mId);
   };
+  // function to logout id ;
+  const onLogout = async () => {
+    try {
+      await authService.logout();
+      localStorage.removeItem("access");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
+
   if (!groupId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -171,7 +194,7 @@ const GroupDashboard = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-3">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex-1">
@@ -179,9 +202,11 @@ const GroupDashboard = () => {
           </h1>
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             {/* User Info */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" style={{ cursor: "pointer" }}>
               <div className="flex items-center gap-1">
-                <User className="h-8 w-8 text-indigo-600 mt-1" />
+                <div className="bg-indigo-200 p-1 ">
+                  <User className="h-5 w-5 text-indigo-600 " />
+                </div>
                 <h1 className="font-bold text-2xl truncate">
                   {currentUser?.name}
                 </h1>
@@ -200,35 +225,59 @@ const GroupDashboard = () => {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 style={{ cursor: "pointer" }}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                {isDropdownOpen ? (
+                  // Red X icon when dropdown is open
+                  <svg
+                    className="w-5 h-5 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  // Three lines icon when dropdown is closed
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute left mt-2 w-20 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                   <button
                     className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 rounded-t-lg"
                     style={{ cursor: "pointer" }}
-                    onClick={() => setIsDropdownOpen(false)}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      navigate("/dashboard");
+                    }}
                   >
-                    Contact
+                    Dashboard
                   </button>
                   <button
                     className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 rounded-b-lg text-red-600"
                     style={{ cursor: "pointer" }}
-                    onClick={() => setIsDropdownOpen(false)}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      onLogout();
+                    }}
                   >
                     Logout
                   </button>
@@ -239,9 +288,9 @@ const GroupDashboard = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Left Section - Group Details */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 ">
             <GroupDetailsSection
               group={currentGroup}
               members={members}
@@ -304,6 +353,7 @@ const GroupDashboard = () => {
                 members={members}
                 onUpdateGroup={setCurrentGroup}
                 onRefresh={loadGroupData}
+                isAdmin={isAdmin}
               />
             )}
           </div>

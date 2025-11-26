@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Button from "./Button";
+import { expenseService } from "../services/expenseService";
+import { NavLink } from "react-router-dom";
 
 const ExpenseSection = ({
   currentUser,
@@ -10,6 +12,7 @@ const ExpenseSection = ({
 }) => {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [expandedExpense, setExpandedExpense] = useState(null);
+  const [expenseDetails, setExpenseDetails] = useState({});
   const [includeParticipants, setIncludeParticipants] = useState(false);
   const [newExpense, setNewExpense] = useState({
     title: "",
@@ -137,11 +140,14 @@ const ExpenseSection = ({
     return members.find((m) => m.id == mId);
   };
 
+  // expenses.forEach((element) => {
+  //   console.log(element);
+  // });
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
       {/* Section Header */}
       <h2 className="text-xl font-semibold text-gray-900">Expenses</h2>
-      <div className="flex justify-end items-center mb-6">
+      <div className="flex justify-end items-center mb-6 mt-4">
         <div className="flex space-x-3">
           <Button variant="green" onClick={() => onRecordPayment()}>
             Record Payment
@@ -157,25 +163,38 @@ const ExpenseSection = ({
       </div>
 
       {/* Expenses List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {expenses.map((expense) => (
           <div
             key={expense.id}
             className="border border-gray-200 rounded-lg overflow-hidden"
           >
             <div
-              className="flex justify-between items-center p-4 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-              onClick={() =>
-                setExpandedExpense(
-                  expandedExpense === expense.id ? null : expense.id
-                )
-              }
+              className="flex justify-between items-center p-3 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={async () => {
+                if (expandedExpense === expense.id) {
+                  setExpandedExpense(null);
+                } else {
+                  setExpandedExpense(expense.id);
+
+                  // Fetch full expense details and update the ExpenseDetails array
+                  const res = await expenseService.getExpense(
+                    expense.group_id,
+                    expense.id
+                  );
+                  setExpenseDetails(res.data);
+                }
+              }}
             >
-              <div className="flex items-center space-x-4 flex-1">
-                <span className="text-sm text-gray-500 min-w-20">
-                  {new Date(expense.created_at).toLocaleDateString()}
-                </span>
-                <span className="font-medium text-gray-900 flex-1">
+              <div className="flex items-center space-x-4 flex-1 gap-0.1">
+                <div className="text-sm text-gray-800 min-w-20 bg-amber-100 p-1 rounded-sm">
+                  {new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(new Date(expense.created_at))}
+                </div>
+                <span className="font-medium text-gray-900 flex-1 ">
                   {expense.title}
                 </span>
                 <span className="text-sm text-gray-600">
@@ -194,31 +213,55 @@ const ExpenseSection = ({
             </div>
 
             {expandedExpense === expense.id && (
-              <div className="p-4 bg-gray-50 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-3">
+              <div className="p-4 bg-gray-50 border-t border-gray-200 relative pb-10">
+                <p className="text-sm text-gray-600 mb-4">
                   <span className="font-medium">Description:</span>{" "}
                   {expense.description}
                 </p>
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
-                    Participants:
-                  </h4>
-                  <div className="space-y-2">
-                    {expense.participants?.map((participant) => (
-                      <div
-                        key={participant.member_id}
-                        className="flex justify-between text-sm"
-                      >
-                        <span className="text-gray-600">
-                          {participant.member_name}
-                        </span>
-                        <span className="font-medium text-gray-900">
-                          ${participant.paid_amt}
-                        </span>
+
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="grid grid-cols-2 bg-gray-100 border-b border-gray-200">
+                    <div className="px-4 py-2 font-medium text-gray-900">
+                      Participants
+                    </div>
+                    <div className="px-4 py-2 font-medium text-gray-900 text-right border-l border-gray-200">
+                      Shares
+                    </div>
+                  </div>
+
+                  <div className="divide-y divide-gray-200">
+                    {expenseDetails.participants == null ||
+                    expenseDetails.participants.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-gray-600 text-center col-span-2 italic">
+                        All members are participants
                       </div>
-                    ))}
+                    ) : (
+                      expenseDetails.participants?.map((participant, index) => (
+                        <div
+                          key={participant.member_id}
+                          className={`grid grid-cols-2 ${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                          }`}
+                        >
+                          <div className="px-4 py-3 text-sm text-gray-700">
+                            {getMemberObject(participant.member_id)?.name}
+                          </div>
+                          <div className="px-4 py-3 text-sm font-medium text-gray-900 text-right border-l border-gray-200">
+                            ${participant.paid_amt.toFixed(2)}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
+                <NavLink
+                  to={"expenses"}
+                  className={
+                    "p-2 absolute bottom-2 right-2 text-blue-600 hover:text-blue-800 text-sm underline underline-offset-2 hover:no-underline transition-all duration-200"
+                  }
+                >
+                  More details
+                </NavLink>
               </div>
             )}
           </div>

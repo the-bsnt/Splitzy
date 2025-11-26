@@ -25,11 +25,13 @@ class ExpensesSerializer(serializers.ModelSerializer):
             "amount",
             "participants",
             "created_at",
+            "group_id",
         ]
         extra_kwargs = {
             "description": {"required": False},
             "id": {"read_only": True},
             "created_at": {"read_only": True},
+            "group_id": {"read_only": True},
         }
 
     def validate(self, attrs):

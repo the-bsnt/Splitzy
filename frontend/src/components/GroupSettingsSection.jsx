@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { groupService } from "../services/groupService";
 
-const GroupSettingsSection = ({ group, members, onUpdateGroup, onRefresh }) => {
+const GroupSettingsSection = ({
+  group,
+  members,
+  onUpdateGroup,
+  onRefresh,
+  isAdmin,
+}) => {
   const [editingGroup, setEditingGroup] = useState(false);
   const [groupForm, setGroupForm] = useState({
     name: group?.name || "",
     description: group?.description || "",
   });
-
-  const isAdmin = true; // Replace with actual admin check
 
   const handleUpdateGroup = async (e) => {
     e.preventDefault();
