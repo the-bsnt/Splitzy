@@ -3,6 +3,7 @@ import { groupService } from "../services/groupService";
 import { LucideTrash2 } from "lucide-react";
 import TransferAdmin from "./TransferAdmin";
 import { useNavigate } from "react-router-dom";
+import Button from "./Button";
 const GroupSettingsSection = ({
   group,
   members,
@@ -17,8 +18,10 @@ const GroupSettingsSection = ({
     description: group?.description || "",
     admin: group?.admin || "",
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const handleUpdateGroup = async (e) => {
     e.preventDefault();
     try {
@@ -33,8 +36,10 @@ const GroupSettingsSection = ({
     if (window.confirm("Are you sure you want to delete this group?")) {
       try {
         await groupService.deleteGroup(group.id);
+        onRefresh();
       } catch (error) {
         console.error("Error deleting group:", error);
+        setShowDeleteModal(false);
       }
     }
   };
@@ -139,6 +144,7 @@ const GroupSettingsSection = ({
         groupMembers={members}
         currentUser={group?.admin} // current admin user ID
         group={group} // current group
+        onRefresh={onRefresh}
       />
       {/* Delete Group */}
       <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
@@ -147,16 +153,57 @@ const GroupSettingsSection = ({
           Once you delete a group, there is no going back. Please be certain.
         </p>
         <button
+          style={{ cursor: "pointer" }}
           type="button"
-          onClick={async () => {
-            await handleDeleteGroup();
-            navigate("/dashboard");
-          }}
+          onClick={() => setShowDeleteModal(true)}
           className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
         >
           Delete Group
         </button>
       </div>
+      {/* Delete Model */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-6">
+            <h3 className="text-lg font-medium text-red-600 mb-2">
+              Confirm Deletion
+            </h3>
+
+            <p className="text-gray-600 mb-4">
+              This action cannot be undone. Type{" "}
+              <span className="font-bold">DELETE</span> to confirm.
+            </p>
+
+            <input
+              type="text"
+              placeholder="Type DELETE here"
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+            />
+
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+              >
+                Cancel
+              </Button>
+              <button
+                onClick={handleDeleteGroup}
+                disabled={confirmText !== "DELETE"}
+                className="px-4 py-2 bg-red-600 text-white rounded disabled:bg-gray-400 "
+                style={{
+                  cursor: confirmText !== "DELETE" ? "not-allowed" : "pointer",
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Manage Members */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">

@@ -8,6 +8,7 @@ const TransferAdmin = ({
   currentUser,
   groupMembers = [],
   group,
+  onRefresh,
 }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedNewAdmin, setSelectedNewAdmin] = useState({});
@@ -26,6 +27,7 @@ const TransferAdmin = ({
     });
     setShowTransferModal(false);
     setSelectedNewAdmin({});
+    onRefresh();
   };
 
   return (
@@ -97,7 +99,7 @@ const TransferAdmin = ({
                 type="button"
                 onClick={handleTransferAdmin}
                 disabled={!selectedNewAdmin}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors"
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 "
                 style={{
                   cursor: !selectedNewAdmin ? "not-allowed" : "pointer",
                 }}

@@ -81,7 +81,6 @@ const GroupDashboard = () => {
       setCurrentGroup(groupResponse.data);
       setMembers(membersResponse.data);
       setBalances(convertToFloat(balancesResponse.data));
-
       setSuggestedTransactions(transactionsResponse.data);
     } catch (err) {
       setError("Failed to load data");

@@ -17,7 +17,7 @@ from .serializers import (
     RecordPaymentSerializer,
 )
 
-from groups.permissions import IsGroupMember
+from groups.permissions import IsGroupMember, IsGroupAdmin, IsSelfOrAdmin
 
 
 def min_cash_flow(balances):
@@ -145,7 +145,7 @@ class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
         if response.status_code == 200:
             # balance is converted to string due to frontend issue
             balance_list = [
-                {**b, "balance": str(round(b.get("balance"), 2))} for b in response.data
+                {**b, "balance": str(b.get("balance"))} for b in response.data
             ]
 
             return Response(balance_list, status=status.HTTP_200_OK)
@@ -217,9 +217,9 @@ class RecordPaymentView(APIView):
             },
         ]
         for r in record_list:
-            balance_instance = GroupBalancesSerializer(data=r)
-            balance_instance.is_valid(raise_exception=True)
-            balance_instance.save()
+            balance_serializer = GroupBalancesSerializer(data=r)
+            balance_serializer.is_valid(raise_exception=True)
+            balance_serializer.save()
 
         return Response(
             {"detail": "Payment Recorded Successfully"},
