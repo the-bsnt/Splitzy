@@ -210,7 +210,7 @@ class AcceptInvitationView(APIView):
     # code A,B,C... is just for testing you can remove it.
     def post(self, request, *args, **kwargs):
         token = request.GET.get("token")
-        print(token)
+
         if not token:
             return Response(
                 {"code": "A", "detail": "Invitation token is required."},
@@ -283,3 +283,40 @@ class AcceptInvitationView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
+
+class RejectInvitationView(APIView):
+    def post(self, request, *args, **kwargs):
+        token = request.GET.get("token")
+        if not token:
+            return Response(
+                {"detail": "Invitation token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        invitation_instance = get_object_or_404(Invitation, token=token)
+        if invitation_instance.status == "A":
+            return Response(
+                {"detail": "Invitation is already Accepted."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        invitation_instance.status = "E"
+        invitation_instance.save()
+        return Response(
+            {
+                "detail": "Invitation rejected successfully.",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class InvitationsForUserListView(generics.GenericAPIView, mixins.ListModelMixin):
+    serializer_class = InvitationSerializer
+    queryset = Invitation.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        return qs.filter(invited_email=user.email, status="P")
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

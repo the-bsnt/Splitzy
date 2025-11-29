@@ -44,6 +44,7 @@ class Invitation(models.Model):
     token = models.CharField(max_length=100, unique=True)
     status = models.CharField(max_length=1, choices=STATUS, default="P")
     invited_by = models.EmailField(null=True)  # you can remove null later
+    # add created_at field(optional)
 
     def __str__(self):
         return f"{self.group_id}-{self.invited_email}-{self.status}"
