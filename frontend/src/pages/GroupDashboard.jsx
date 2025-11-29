@@ -40,7 +40,7 @@ const GroupDashboard = () => {
         setCurrentUser(res.data);
       } catch (err) {
         console.error("Unauthorized or expired token", err);
-        // navigate("/login");
+        navigate("/login");
       }
     };
     fetchProfile();
@@ -296,6 +296,7 @@ const GroupDashboard = () => {
               onAddMember={handleAddMember}
               onMemberClick={setSelectedMember}
               onRefresh={loadGroupData}
+              user={currentUser}
             />
           </div>
 

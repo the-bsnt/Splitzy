@@ -72,8 +72,7 @@ class ExpensesView(
 ):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get_queryset(self):
         group_id = self.kwargs.get("pk")
@@ -127,16 +126,15 @@ class ExpenseDetailView(generics.GenericAPIView, mixins.RetrieveModelMixin):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesDetailSerializer
     lookup_field = "id"
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
 
 class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
+
     queryset = GroupBalances.objects.all()
     serializer_class = GroupBalancesSerializer
 
@@ -158,8 +156,7 @@ class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
 
 
 class SuggestedSettlementsView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get(self, request, *args, **kwargs):
         group_id = kwargs.get("pk")
@@ -170,12 +167,8 @@ class SuggestedSettlementsView(APIView):
         return Response(settlements, status=status.HTTP_200_OK)
 
 
-# view to record actual payment to settle:
-
-
 class RecordPaymentView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -185,16 +178,6 @@ class RecordPaymentView(APIView):
         payer = serializer.data.get("debtor")
         receiver = serializer.data.get("creditor")
         payment = serializer.data.get("payment")
-
-        # retrieve the payer and receiver membership ids
-        # try:
-        #     payer = group.membership_set.all().get(email=payer_email, group_id=group)
-        #     receiver = group.membership_set.all().get(
-        #         email=receiver_email, group_id=group
-        #     )
-        # except Membership.DoesNotExist:
-
-        #     raise ValueError("Payer or Receiver not found in this group")
 
         # update transcation record table
         t = {
@@ -228,8 +211,8 @@ class RecordPaymentView(APIView):
 
 
 class TransactionRecordsView(generics.GenericAPIView, mixins.ListModelMixin):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
+
     queryset = TransactionRecords.objects.all()
     serializer_class = TransactionRecordsSerializer
     lookup_field = "id"

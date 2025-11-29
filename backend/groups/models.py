@@ -25,9 +25,6 @@ class Membership(models.Model):
         CustomUser, null=True, blank=True, on_delete=models.CASCADE
     )  # if verified user is deleted (set user deleted) then memeber is also delete (fix this if you require : this is remainder only)
     verified = models.BooleanField(default=False)
-    # @property
-    # def verified(self):
-    #     if self.user_id is not
 
     def __str__(self):
         return f"{self.email}|G={self.group_id.name}"
