@@ -9,6 +9,7 @@ const ExpenseSection = ({
   members,
   onAddExpense,
   onRecordPayment,
+  groupName,
 }) => {
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [expandedExpense, setExpandedExpense] = useState(null);
@@ -255,7 +256,12 @@ const ExpenseSection = ({
                   </div>
                 </div>
                 <NavLink
-                  to={"expenses"}
+                  to={`expense/${expense.title}`}
+                  state={{
+                    groupId: expense.group_id,
+                    expenseId: expense.id,
+                    groupName: groupName,
+                  }}
                   className={
                     "p-2 absolute bottom-2 right-2 text-blue-600 hover:text-blue-800 text-sm underline underline-offset-2 hover:no-underline transition-all duration-200"
                   }

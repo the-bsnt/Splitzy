@@ -8,7 +8,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from groups.models import Groups, Membership
 
-from .models import Expenses, ExpensesParticipants, GroupBalances
+from .models import Expenses, ExpensesParticipants, GroupBalances, TransactionRecords
 from .serializers import (
     ExpensesSerializer,
     ExpensesDetailSerializer,
@@ -225,3 +225,19 @@ class RecordPaymentView(APIView):
             {"detail": "Payment Recorded Successfully"},
             status=status.HTTP_200_OK,
         )
+
+
+class TransactionRecordsView(generics.GenericAPIView, mixins.ListModelMixin):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    queryset = TransactionRecords.objects.all()
+    serializer_class = TransactionRecordsSerializer
+    lookup_field = "id"
+
+    def get_queryset(self):
+        expense_id = self.kwargs.get("id")
+        qs = super().get_queryset()
+        return qs.filter(expense_id=expense_id)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

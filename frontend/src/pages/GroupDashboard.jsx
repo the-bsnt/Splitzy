@@ -307,6 +307,7 @@ const GroupDashboard = () => {
               members={members}
               onAddExpense={handleAddExpense}
               onRecordPayment={() => openPaymentModal()}
+              groupName={currentGroup?.name}
             />
           </div>
 
