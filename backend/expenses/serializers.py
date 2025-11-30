@@ -39,6 +39,8 @@ class ExpensesSerializer(serializers.ModelSerializer):
         group_id = self.context.get("view").kwargs.get("pk")
         group = get_object_or_404(Groups, id=group_id)
         attrs["group_id"] = group
+        # set added_by field to current user
+        attrs["added_by"] = self.context.get("request", None).user
         if Expenses.objects.filter(
             group_id=group.id, title=attrs.get("title")
         ).exists():
@@ -86,6 +88,7 @@ class ExpensesDetailSerializer(serializers.ModelSerializer):
     participants = ExpensesParticipantsSerializer(
         many=True, source="expensesparticipants_set"
     )
+    added_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Expenses
@@ -97,8 +100,14 @@ class ExpensesDetailSerializer(serializers.ModelSerializer):
             "paid_by",
             "amount",
             "created_at",
+            "added_by",
+            "added_by_name",
+            "is_settled",
             "participants",
         ]
+
+    def get_added_by_name(self, obj):
+        return obj.added_by.name
 
 
 class TransactionRecordsSerializer(serializers.ModelSerializer):

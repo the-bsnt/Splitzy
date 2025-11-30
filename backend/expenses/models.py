@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 from groups.models import Groups, Membership
+from users.models import CustomUser
 
 
 class Expenses(models.Model):
@@ -11,6 +12,8 @@ class Expenses(models.Model):
     description = models.TextField(blank=True, default="")
     amount = models.FloatField(default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
+    added_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    is_settled = models.BooleanField(default=False, null=True)
 
     def __str__(self):
         return f"{self.title}- Amt= {self.amount}"
@@ -38,17 +41,21 @@ class TransactionRecords(models.Model):
     expense_id = models.ForeignKey(
         Expenses, on_delete=models.CASCADE, null=True, blank=True
     )
+    group_id = models.ForeignKey(
+        Groups, on_delete=models.CASCADE, null=True, blank=True
+    )
     debtor = models.ForeignKey(
         Membership, on_delete=models.CASCADE, related_name="payer"
     )
     creditor = models.ForeignKey(
         Membership, on_delete=models.CASCADE, related_name="receiver"
     )
+    recorded_by = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="recorded_by", null=True
+    )
     payment = models.FloatField(default=0.0)
-    type = models.CharField(max_length=1, choices=TYPE, default="P", null=True)
-    created_at = models.DateTimeField(
-        auto_now_add=True, null=True
-    )  # remove null after migration
+    type = models.CharField(max_length=1, choices=TYPE, default="P")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f" {self.debtor} ---> {self.creditor} || Amt = {self.payment}"

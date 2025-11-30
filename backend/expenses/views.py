@@ -108,6 +108,7 @@ class ExpensesView(
         transactions = min_cash_flow(balances)
         for t in transactions:
             t["expense_id"] = expense_instance.id
+            # t["recorded_by"] = self.request.user.id (no need)
             settlement_serializer = TransactionRecordsSerializer(data=t)
             if settlement_serializer.is_valid(raise_exception=True):
                 settlement_serializer.save()
@@ -172,6 +173,7 @@ class RecordPaymentView(APIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
+        usr = request.user
         group = get_object_or_404(Groups, id=kwargs.get("pk"))
         serializer = RecordPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -184,6 +186,8 @@ class RecordPaymentView(APIView):
             "debtor": payer,
             "creditor": receiver,
             "payment": payment,
+            "group_id": group.id,
+            "recorded_by": usr.id,
             "type": "A",
         }
         transaction_serializer = TransactionRecordsSerializer(data=t)

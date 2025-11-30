@@ -151,6 +151,7 @@ const GroupDashboard = () => {
   // Add the  handleRecordPayment function
   const handleRecordPayment = async (paymentData) => {
     try {
+      // paymentData = { ...paymentData, group_id: groupId };
       await expenseService.recordPayment(groupId, paymentData);
       await loadGroupData();
       setShowPaymentModal(false);

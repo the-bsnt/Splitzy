@@ -105,7 +105,20 @@ const ExpenseDetail = () => {
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
       {/* Header */}
       <div className="border-b pb-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{expense.title}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800">{expense.title}</h1>
+
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+              expense.is_settled
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {expense.is_settled ? "Settled" : "Not Settled"}
+          </span>
+        </div>
+
         {expense.description && (
           <p className="text-gray-600 mt-2">{expense.description}</p>
         )}
@@ -154,6 +167,12 @@ const ExpenseDetail = () => {
               Group:
             </label>
             <p className="text-lg text-gray-800">{groupName}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">
+              Added By:
+            </label>
+            <p className="text-lg text-gray-800">{expense.added_by_name}</p>
           </div>
         </div>
       </div>
