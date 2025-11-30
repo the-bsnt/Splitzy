@@ -48,7 +48,6 @@ function Dashboard() {
   const [invitations, setInvitations] = useState([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
   const [reload, setReload] = useState(false);
-  // const [notifications, setNotifications] = useState([]);
   const { notifications, addNotification, removeNotification } =
     useNotification();
 
@@ -191,8 +190,10 @@ function Dashboard() {
     try {
       await groupService.acceptInvitation(token);
       setReload(true);
+      addNotification("Invitation Accepted!", "success");
     } catch (err) {
       console.error("Failed to accept invitation", err);
+      addNotification("Something went wrong!", "error");
     }
   };
   // Reject Invitation
@@ -200,8 +201,10 @@ function Dashboard() {
     try {
       await groupService.rejectInvitation(token);
       setReload(true);
+      addNotification("Invitation Rejected!", "success");
     } catch (err) {
       console.error("Failed to reject invitation", err);
+      addNotification("Something went wrong!", "error");
     }
   };
 

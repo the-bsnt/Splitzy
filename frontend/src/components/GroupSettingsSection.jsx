@@ -11,6 +11,7 @@ const GroupSettingsSection = ({
   onRefresh,
   isAdmin,
   currentGroup,
+  addNotification,
 }) => {
   const [editingGroup, setEditingGroup] = useState(false);
   const [groupForm, setGroupForm] = useState({
@@ -41,8 +42,10 @@ const GroupSettingsSection = ({
       const response = await groupService.updateGroup(group.id, groupForm);
       onUpdateGroup(response.data);
       setEditingGroup(false);
+      addNotification("Group Updated Successfully!", "success");
     } catch (error) {
       console.error("Error updating group:", error);
+      addNotification("Failed to Update Group!", "success");
     }
   };
   const handleDeleteGroup = async () => {
@@ -51,6 +54,9 @@ const GroupSettingsSection = ({
         await groupService.deleteGroup(group.id);
         onRefresh();
       } catch (error) {
+        setConfirmText("");
+        setShowDeleteModal(false);
+        addNotification("Failed to Delete Group!", "error");
         console.error("Error editing group:", error);
       }
     }
@@ -61,7 +67,10 @@ const GroupSettingsSection = ({
       try {
         await groupService.deleteMember(group.id, memberId);
         onRefresh();
+        addNotification("Member Removed Successfully!", "success");
       } catch (error) {
+        setConfirmDeleteBox({ isOpen: false });
+        addNotification("Failed to Remove Member!", "error");
         console.error("Error removing member:", error);
       }
     }
@@ -84,7 +93,10 @@ const GroupSettingsSection = ({
         isVerified: null,
       });
       onRefresh();
+      addNotification("Member Details Updated Successfully!", "success");
     } catch (error) {
+      setEditMemberModal({ isOpen: false });
+      addNotification("Failed to Edit Member!", "error");
       console.error("Error removing member:", error);
     }
   };
@@ -187,6 +199,7 @@ const GroupSettingsSection = ({
         currentUser={group?.admin} // current admin user ID
         group={group} // current group
         onRefresh={onRefresh}
+        addNotification={addNotification}
       />
       {/* Delete Group */}
       <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
@@ -227,7 +240,10 @@ const GroupSettingsSection = ({
             <div className="flex justify-end space-x-3">
               <Button
                 variant="ghost"
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setConfirmText("");
+                }}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
               >
                 Cancel

@@ -9,6 +9,7 @@ const TransferAdmin = ({
   groupMembers = [],
   group,
   onRefresh,
+  addNotification,
 }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedNewAdmin, setSelectedNewAdmin] = useState({});
@@ -19,15 +20,20 @@ const TransferAdmin = ({
   );
 
   const handleTransferAdmin = async () => {
-    await groupService.partialUpdateGroup(group.id, selectedNewAdmin);
+    try {
+      await groupService.partialUpdateGroup(group.id, selectedNewAdmin);
 
-    setGroupForm({
-      ...groupForm,
-      admin: selectedNewAdmin,
-    });
-    setShowTransferModal(false);
-    setSelectedNewAdmin({});
-    onRefresh();
+      setGroupForm({
+        ...groupForm,
+        admin: selectedNewAdmin,
+      });
+      setShowTransferModal(false);
+      setSelectedNewAdmin({});
+      onRefresh();
+      addNotification("Admin Transfered Succesfully!", "success");
+    } catch {
+      addNotification("Failed to Transfer Admin!", "error");
+    }
   };
 
   return (
