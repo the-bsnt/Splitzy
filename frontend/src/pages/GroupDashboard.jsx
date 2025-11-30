@@ -10,6 +10,10 @@ import GroupSettingsSection from "../components/GroupSettingsSection";
 import MemberDetailModal from "../components/MemberDetailModal";
 import Button from "../components/Button";
 import { DollarSign, Mail, Pointer, Settings, User } from "lucide-react";
+import ErrorMessage from "../components/ErrorMessage";
+import { useError } from "../hooks/useError";
+import { useNotification } from "../hooks/notification";
+import NotificationContainer from "../components/Noticification";
 
 const GroupDashboard = () => {
   const location = useLocation();
@@ -24,7 +28,7 @@ const GroupDashboard = () => {
   const [activeSection, setActiveSection] = useState("balances");
   const [selectedMember, setSelectedMember] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { error: error, setError, clearError } = useError();
   const [currentUser, setCurrentUser] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState({
@@ -33,6 +37,9 @@ const GroupDashboard = () => {
     payment: "",
   });
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { notifications, addNotification, removeNotification } =
+    useNotification();
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -40,7 +47,7 @@ const GroupDashboard = () => {
         setCurrentUser(res.data);
       } catch (err) {
         console.error("Unauthorized or expired token", err);
-        // navigate("/login");
+        navigate("/login");
       }
     };
     fetchProfile();
@@ -81,7 +88,6 @@ const GroupDashboard = () => {
       setCurrentGroup(groupResponse.data);
       setMembers(membersResponse.data);
       setBalances(convertToFloat(balancesResponse.data));
-
       setSuggestedTransactions(transactionsResponse.data);
     } catch (err) {
       setError("Failed to load data");
@@ -118,9 +124,10 @@ const GroupDashboard = () => {
     try {
       const response = await groupService.addMember(groupId, memberData);
       setMembers((prev) => [...prev, response.data]);
+      addNotification("Member Added Successfully!", "success");
     } catch (err) {
-      setError("Failed to add member");
       console.error("Error adding member:", err);
+      addNotification("Failed to add member!", "error");
     }
   };
 
@@ -131,9 +138,10 @@ const GroupDashboard = () => {
       setExpenses((prev) => [...prev, response.data]);
       await loadGroupData();
       await loadExpenseData();
+      addNotification("New Expense Added Successfully!", "success");
     } catch (err) {
-      setError("Failed to add expense");
       console.error("Error adding expense:", err);
+      addNotification("Failed to Add Expense!", "error");
     }
   };
 
@@ -146,13 +154,14 @@ const GroupDashboard = () => {
       await expenseService.recordPayment(groupId, paymentData);
       await loadGroupData();
       setShowPaymentModal(false);
+      addNotification("Payment Recorded Successfully!", "success");
       setPaymentData({
         debtor: "",
         creditor: "",
         payment: "",
       });
     } catch (err) {
-      setError("Failed to record payment");
+      addNotification("Failed to Record payment!", "error");
       console.error("Error recording payment:", err);
     }
   };
@@ -167,6 +176,7 @@ const GroupDashboard = () => {
       localStorage.removeItem("access");
       navigate("/login");
     } catch (err) {
+      addNotification("Something went wrong!", "error");
       console.error("Logout failed", err);
     }
   };
@@ -189,13 +199,19 @@ const GroupDashboard = () => {
   if (error)
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-lg">{error}</div>
+        <ErrorMessage
+          error={error}
+          onDismiss={clearError}
+          autoDismiss={true}
+          dismissTime={5000}
+        />
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50 p-3">
+      {/* <div className="max-w-7xl mx-auto"> */}
+      <div className="w-full mx-auto">
         <div className="flex items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex-1">
             {currentGroup?.name}
@@ -260,7 +276,7 @@ const GroupDashboard = () => {
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute left mt-2 w-20 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 mt-2 w-23 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                   <button
                     className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 rounded-t-lg"
                     style={{ cursor: "pointer" }}
@@ -297,6 +313,7 @@ const GroupDashboard = () => {
               onAddMember={handleAddMember}
               onMemberClick={setSelectedMember}
               onRefresh={loadGroupData}
+              user={currentUser}
             />
           </div>
 
@@ -308,6 +325,7 @@ const GroupDashboard = () => {
               members={members}
               onAddExpense={handleAddExpense}
               onRecordPayment={() => openPaymentModal()}
+              groupName={currentGroup?.name}
             />
           </div>
 
@@ -346,6 +364,7 @@ const GroupDashboard = () => {
                 balances={balances}
                 suggestedTransactions={suggestedTransactions}
                 loadGroupData={() => loadGroupData()}
+                addNotification={addNotification}
               />
             ) : (
               <GroupSettingsSection
@@ -355,6 +374,7 @@ const GroupDashboard = () => {
                 onRefresh={loadGroupData}
                 isAdmin={isAdmin}
                 currentGroup={currentGroup}
+                addNotification={addNotification}
               />
             )}
           </div>
@@ -466,6 +486,10 @@ const GroupDashboard = () => {
           </div>
         )}
       </div>
+      <NotificationContainer
+        notifications={notifications}
+        removeNotification={removeNotification}
+      />
     </div>
   );
 };

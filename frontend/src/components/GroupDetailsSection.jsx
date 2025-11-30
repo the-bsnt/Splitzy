@@ -9,25 +9,12 @@ const GroupDetailsSection = ({
   onAddMember,
   onMemberClick,
   onRefresh,
+  user,
 }) => {
-  const navigate = useNavigate;
-
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMember, setNewMember] = useState({ email: "", name: "" });
-  const [user, setUser] = useState(null);
+
   const [isAdmin, setAdmin] = useState(false);
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await authService.profile();
-        setUser(res.data);
-      } catch (err) {
-        console.error("Unauthorized or expired token", err);
-        navigate("/login");
-      }
-    };
-    fetchProfile();
-  }, [navigate]);
 
   useEffect(() => {
     if (user && group) {
@@ -135,6 +122,7 @@ const GroupDetailsSection = ({
                       handleInviteMember(member.id);
                     }}
                     className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                    style={{ cursor: "pointer" }}
                   >
                     Invite
                   </button>
@@ -179,12 +167,14 @@ const GroupDetailsSection = ({
                   type="button"
                   onClick={() => setShowAddMember(false)}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  style={{ cursor: "pointer" }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  style={{ cursor: "pointer" }}
                 >
                   Add Member
                 </button>

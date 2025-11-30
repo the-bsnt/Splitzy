@@ -8,6 +8,7 @@ const BalancesSection = ({
   balances,
   suggestedTransactions,
   loadGroupData,
+  addNotification,
 }) => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
@@ -16,8 +17,10 @@ const BalancesSection = ({
       await expenseService.recordPayment(groupId, transaction);
       setSelectedTransaction(null);
       loadGroupData();
+      addNotification("Transaction Settlement Successfull!", "success");
     } catch (error) {
       console.error("Error settling transaction:", error);
+      addNotification("Transaction Settlement Failed!", "error");
     }
   };
   const getMemberObject = function (mId) {

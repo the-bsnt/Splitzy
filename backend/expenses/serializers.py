@@ -125,6 +125,9 @@ class GroupBalancesSerializer(serializers.ModelSerializer):
         )
         if not created:
             balance_instance.balance += validated_data.get("balance")
+        # Using tolerance comparison to tolerate tiny numbers which are equivalent to zero to solve classic floating-point representation error. 0.64+4e ~=0
+        if abs(balance_instance.balance) < 0.00001:
+            balance_instance.balance = 0
         balance_instance.save()
         return balance_instance
 

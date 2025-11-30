@@ -8,7 +8,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from groups.models import Groups, Membership
 
-from .models import Expenses, ExpensesParticipants, GroupBalances
+from .models import Expenses, ExpensesParticipants, GroupBalances, TransactionRecords
 from .serializers import (
     ExpensesSerializer,
     ExpensesDetailSerializer,
@@ -17,7 +17,7 @@ from .serializers import (
     RecordPaymentSerializer,
 )
 
-from groups.permissions import IsGroupMember
+from groups.permissions import IsGroupMember, IsGroupAdmin, IsSelfOrAdmin
 
 
 def min_cash_flow(balances):
@@ -72,8 +72,7 @@ class ExpensesView(
 ):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesSerializer
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get_queryset(self):
         group_id = self.kwargs.get("pk")
@@ -127,16 +126,15 @@ class ExpenseDetailView(generics.GenericAPIView, mixins.RetrieveModelMixin):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesDetailSerializer
     lookup_field = "id"
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
 
 class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
+
     queryset = GroupBalances.objects.all()
     serializer_class = GroupBalancesSerializer
 
@@ -145,7 +143,7 @@ class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
         if response.status_code == 200:
             # balance is converted to string due to frontend issue
             balance_list = [
-                {**b, "balance": str(round(b.get("balance"), 2))} for b in response.data
+                {**b, "balance": str(b.get("balance"))} for b in response.data
             ]
 
             return Response(balance_list, status=status.HTTP_200_OK)
@@ -158,8 +156,7 @@ class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
 
 
 class SuggestedSettlementsView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get(self, request, *args, **kwargs):
         group_id = kwargs.get("pk")
@@ -170,12 +167,8 @@ class SuggestedSettlementsView(APIView):
         return Response(settlements, status=status.HTTP_200_OK)
 
 
-# view to record actual payment to settle:
-
-
 class RecordPaymentView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
@@ -185,16 +178,6 @@ class RecordPaymentView(APIView):
         payer = serializer.data.get("debtor")
         receiver = serializer.data.get("creditor")
         payment = serializer.data.get("payment")
-
-        # retrieve the payer and receiver membership ids
-        # try:
-        #     payer = group.membership_set.all().get(email=payer_email, group_id=group)
-        #     receiver = group.membership_set.all().get(
-        #         email=receiver_email, group_id=group
-        #     )
-        # except Membership.DoesNotExist:
-
-        #     raise ValueError("Payer or Receiver not found in this group")
 
         # update transcation record table
         t = {
@@ -217,11 +200,27 @@ class RecordPaymentView(APIView):
             },
         ]
         for r in record_list:
-            balance_instance = GroupBalancesSerializer(data=r)
-            balance_instance.is_valid(raise_exception=True)
-            balance_instance.save()
+            balance_serializer = GroupBalancesSerializer(data=r)
+            balance_serializer.is_valid(raise_exception=True)
+            balance_serializer.save()
 
         return Response(
             {"detail": "Payment Recorded Successfully"},
             status=status.HTTP_200_OK,
         )
+
+
+class TransactionRecordsView(generics.GenericAPIView, mixins.ListModelMixin):
+    permission_classes = [IsAuthenticated, IsGroupMember]
+
+    queryset = TransactionRecords.objects.all()
+    serializer_class = TransactionRecordsSerializer
+    lookup_field = "id"
+
+    def get_queryset(self):
+        expense_id = self.kwargs.get("id")
+        qs = super().get_queryset()
+        return qs.filter(expense_id=expense_id)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

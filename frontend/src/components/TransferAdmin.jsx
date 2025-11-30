@@ -8,6 +8,8 @@ const TransferAdmin = ({
   currentUser,
   groupMembers = [],
   group,
+  onRefresh,
+  addNotification,
 }) => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedNewAdmin, setSelectedNewAdmin] = useState({});
@@ -18,14 +20,20 @@ const TransferAdmin = ({
   );
 
   const handleTransferAdmin = async () => {
-    await groupService.partialUpdateGroup(group.id, selectedNewAdmin);
+    try {
+      await groupService.partialUpdateGroup(group.id, selectedNewAdmin);
 
-    setGroupForm({
-      ...groupForm,
-      admin: selectedNewAdmin,
-    });
-    setShowTransferModal(false);
-    setSelectedNewAdmin({});
+      setGroupForm({
+        ...groupForm,
+        admin: selectedNewAdmin,
+      });
+      setShowTransferModal(false);
+      setSelectedNewAdmin({});
+      onRefresh();
+      addNotification("Admin Transfered Succesfully!", "success");
+    } catch {
+      addNotification("Failed to Transfer Admin!", "error");
+    }
   };
 
   return (
@@ -97,7 +105,7 @@ const TransferAdmin = ({
                 type="button"
                 onClick={handleTransferAdmin}
                 disabled={!selectedNewAdmin}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors"
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 "
                 style={{
                   cursor: !selectedNewAdmin ? "not-allowed" : "pointer",
                 }}

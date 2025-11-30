@@ -80,6 +80,7 @@ const MemberDetailModal = ({ member, balances, onClose }) => {
         <div className="flex justify-end mt-6">
           <button
             onClick={onClose}
+            style={{ cursor: "pointer" }}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
           >
             Close

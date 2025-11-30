@@ -14,11 +14,18 @@ import {
   ChevronRight,
   Info,
   Settings,
+  Bell,
+  Clock,
+  Check,
+  XCircle,
 } from "lucide-react";
 import { authService } from "../services/authService";
 import Button from "../components/Button";
 import PasswordField from "../components/PasswordField";
 import api from "../api/axios";
+import { groupService } from "../services/groupService";
+import { useNotification } from "../hooks/notification";
+import NotificationContainer from "../components/Noticification";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -38,6 +45,11 @@ function Dashboard() {
   const [groupName, setGroupName] = useState(""); // Added missing state
   const [groupDescription, setGroupDescription] = useState(""); // Added missing state
   const [createGroupError, setCreateGroupError] = useState(""); // Added missing state
+  const [invitations, setInvitations] = useState([]);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
+  const [reload, setReload] = useState(false);
+  const { notifications, addNotification, removeNotification } =
+    useNotification();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -63,14 +75,32 @@ function Dashboard() {
       } catch (err) {
         console.error("Failed to fetch groups", err);
       } finally {
+        setReload(false);
         setLoadingGroups(false);
       }
     };
     if (!loading) {
       fetchGroups();
     }
-  }, [loading]);
+  }, [loading, reload]);
 
+  useEffect(() => {
+    const fetchInvitations = async () => {
+      setLoadingInvitations(true);
+      try {
+        const response = await groupService.listInvitationsForUser();
+        setInvitations(response.data);
+      } catch (err) {
+        console.error("Failed to fetch invitations", err);
+      } finally {
+        setLoadingInvitations(false);
+        setReload(false);
+      }
+    };
+    if (!loading) {
+      fetchInvitations();
+    }
+  }, [loading, reload]);
   const onLogout = async () => {
     try {
       await authService.logout();
@@ -141,6 +171,10 @@ function Dashboard() {
         setShowCreateGroup(false);
         setGroupName("");
         setGroupDescription("");
+        //Success Noticification
+
+        addNotification("Group Created successfully!", "success");
+
         // Refresh groups list
         const groupsResponse = await api.get("/groups/");
         setGroups(groupsResponse.data);
@@ -149,6 +183,28 @@ function Dashboard() {
       setCreateGroupError(
         err.response?.data?.message || "Failed to create group"
       );
+    }
+  };
+  //Accept Invitation
+  const handleAcceptInvitation = async (token) => {
+    try {
+      await groupService.acceptInvitation(token);
+      setReload(true);
+      addNotification("Invitation Accepted!", "success");
+    } catch (err) {
+      console.error("Failed to accept invitation", err);
+      addNotification("Something went wrong!", "error");
+    }
+  };
+  // Reject Invitation
+  const handleRejectInvitation = async (token) => {
+    try {
+      await groupService.rejectInvitation(token);
+      setReload(true);
+      addNotification("Invitation Rejected!", "success");
+    } catch (err) {
+      console.error("Failed to reject invitation", err);
+      addNotification("Something went wrong!", "error");
     }
   };
 
@@ -331,6 +387,7 @@ function Dashboard() {
                   <button
                     onClick={() => setShowCreateGroup(false)}
                     className="text-gray-500 hover:text-gray-700"
+                    style={{ cursor: "pointer" }}
                   >
                     <X className="h-6 w-6" />
                   </button>
@@ -485,13 +542,126 @@ function Dashboard() {
             </div>
           )}
         </motion.div>
+        {/* Invitations Section */}
+        {invitations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="bg-white rounded-2xl shadow-lg p-8 mb-8"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-amber-100 p-2 rounded-lg">
+                <Bell className="h-6 w-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  Pending Invitations
+                </h3>
+                <p className="text-sm text-gray-600">
+                  You have {invitations.length} pending invitation
+                  {invitations.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+
+            {loadingInvitations ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading invitations...</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {invitations.map((invitation) => (
+                  <InvitationCard
+                    key={invitation.id}
+                    invitation={invitation}
+                    onAccept={handleAcceptInvitation}
+                    onReject={handleRejectInvitation}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
+      {/* Render notifications */}
+
+      <NotificationContainer
+        notifications={notifications}
+        removeNotification={removeNotification}
+      />
     </div>
   );
 }
+function InvitationCard({ invitation, onAccept, onReject }) {
+  const [isProcessing, setIsProcessing] = useState(false);
 
+  const handleAccept = async () => {
+    setIsProcessing(true);
+    await onAccept(invitation.token);
+    setIsProcessing(false);
+  };
+
+  const handleReject = async () => {
+    setIsProcessing(true);
+    await onReject(invitation.token);
+    setIsProcessing(false);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="bg-amber-200 p-3 rounded-full">
+            <Users className="h-6 w-6 text-amber-700" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-lg font-semibold text-gray-800">
+              {invitation.group_name}
+            </h4>
+            <p className="text-sm text-gray-600">
+              Invited by{" "}
+              <span className="font-medium">{invitation.invited_by}</span>
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <Clock className="h-3 w-3 text-gray-500" />
+              <span className="text-xs text-gray-500">
+                {invitation.created_at || "Recently"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleAccept}
+            disabled={isProcessing}
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+            style={{ cursor: "pointer" }}
+          >
+            <Check className="h-4 w-4" />
+            Accept
+          </button>
+          <button
+            onClick={handleReject}
+            disabled={isProcessing}
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+            style={{ cursor: "pointer" }}
+          >
+            <XCircle className="h-4 w-4" />
+            Reject
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 function GroupCard({ group, navigate }) {
-  const [showTooltip, setShowTooltip] = useState(false);
   const groupId = group.id;
   return (
     <motion.div
@@ -499,8 +669,6 @@ function GroupCard({ group, navigate }) {
       animate={{ opacity: 1, x: 0 }}
       className="relative bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer border border-indigo-100"
       onClick={() => navigate(`/group/${group.name}`, { state: { groupId } })}
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -518,30 +686,6 @@ function GroupCard({ group, navigate }) {
         </div>
         <ChevronRight className="h-6 w-6 text-indigo-600" />
       </div>
-
-      {/* Tooltip */}
-      <AnimatePresence>
-        {showTooltip && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute top-full left-0 mt-2 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg z-10 w-64"
-          >
-            <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold mb-1">
-                  Click to view group details
-                </p>
-                <p className="text-gray-300">
-                  See expenses, members, and manage this group
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

@@ -6,6 +6,7 @@ from .views import (
     RecordPaymentView,
     ExpenseDetailView,
     SuggestedSettlementsView,
+    TransactionRecordsView,
 )
 
 app_name = "expenses"
@@ -28,5 +29,10 @@ urlpatterns = [
         "groups/<uuid:pk>/settlement/",
         RecordPaymentView.as_view(),
         name="record-payment",
+    ),
+    path(
+        "groups/<uuid:pk>/expenses/<uuid:id>/transactions/",
+        TransactionRecordsView.as_view(),
+        name="transaction-records",
     ),
 ]

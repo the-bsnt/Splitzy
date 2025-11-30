@@ -13,4 +13,6 @@ export const expenseService = {
     api.post(`/groups/${groupId}/settlement/`, paymentData),
   suggestedSettlements: (groupId) =>
     api.get(`/groups/${groupId}/suggested-settlements/`),
+  proposedTransactions: (groupId, expenseId) =>
+    api.get(`/groups/${groupId}/expenses/${expenseId}/transactions/`),
 };
