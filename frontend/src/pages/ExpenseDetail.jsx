@@ -3,6 +3,8 @@ import { useParams, useLocation } from "react-router-dom";
 import { expenseService } from "../services/expenseService";
 import { groupService } from "../services/groupService";
 import Button from "../components/Button";
+import ErrorMessage from "../components/ErrorMessage";
+import { useError } from "../hooks/useError";
 
 const ExpenseDetail = () => {
   const location = useLocation();
@@ -11,7 +13,9 @@ const ExpenseDetail = () => {
   const [members, setMembers] = useState([]);
   const [expense, setExpense] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
+  const { error: error, setError, clearError } = useError();
+
   const [proposedTransactions, setProposedTransactions] = useState([]);
 
   useEffect(() => {
@@ -19,7 +23,6 @@ const ExpenseDetail = () => {
       try {
         setLoading(true);
         const expenseRes = await expenseService.getExpense(groupId, expenseId);
-        console.log(expenseRes.data);
         setExpense(expenseRes.data);
       } catch (err) {
         setError("Failed to fetch expense details");
@@ -33,19 +36,6 @@ const ExpenseDetail = () => {
   }, [groupId, expenseId]);
 
   useEffect(() => {
-    // const fetchGroupDetails = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const groupRes = await groupService.getGroup(groupId);
-    //     setGroup(groupRes.data);
-    //     console.log(groupRes.data);
-    //   } catch (err) {
-    //     data = { error: "error" };
-    //     setGroup(data);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
     const fetchProposedTransactions = async () => {
       try {
         setLoading(true);
@@ -55,6 +45,7 @@ const ExpenseDetail = () => {
         );
         setProposedTransactions(tRes.data);
       } catch (err) {
+        setError("Failed to fetch Proposed Transactions.");
       } finally {
         setLoading(false);
       }
@@ -65,7 +56,6 @@ const ExpenseDetail = () => {
         setLoading(true);
         const memberRes = await groupService.getMembers(groupId);
         setMembers(memberRes.data);
-        console.log(memberRes.data);
       } catch (err) {
         setError("Failed to fetch participants.");
       } finally {
@@ -91,13 +81,17 @@ const ExpenseDetail = () => {
     );
   }
 
-  if (error) {
+  if (error)
     return (
-      <div className="flex justify-center items-center min-h-64">
-        <div className="text-red-500 text-lg">{error}</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <ErrorMessage
+          error={error}
+          onDismiss={clearError}
+          autoDismiss={true}
+          dismissTime={5000}
+        />
       </div>
     );
-  }
 
   if (!expense) {
     return (

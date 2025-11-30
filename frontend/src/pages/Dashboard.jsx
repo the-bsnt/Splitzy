@@ -24,6 +24,8 @@ import Button from "../components/Button";
 import PasswordField from "../components/PasswordField";
 import api from "../api/axios";
 import { groupService } from "../services/groupService";
+import { useNotification } from "../hooks/notification";
+import NotificationContainer from "../components/Noticification";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -46,6 +48,9 @@ function Dashboard() {
   const [invitations, setInvitations] = useState([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
   const [reload, setReload] = useState(false);
+  // const [notifications, setNotifications] = useState([]);
+  const { notifications, addNotification, removeNotification } =
+    useNotification();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -167,6 +172,10 @@ function Dashboard() {
         setShowCreateGroup(false);
         setGroupName("");
         setGroupDescription("");
+        //Success Noticification
+
+        addNotification("Group Created successfully!", "success");
+
         // Refresh groups list
         const groupsResponse = await api.get("/groups/");
         setGroups(groupsResponse.data);
@@ -375,6 +384,7 @@ function Dashboard() {
                   <button
                     onClick={() => setShowCreateGroup(false)}
                     className="text-gray-500 hover:text-gray-700"
+                    style={{ cursor: "pointer" }}
                   >
                     <X className="h-6 w-6" />
                   </button>
@@ -572,6 +582,12 @@ function Dashboard() {
           </motion.div>
         )}
       </div>
+      {/* Render notifications */}
+
+      <NotificationContainer
+        notifications={notifications}
+        removeNotification={removeNotification}
+      />
     </div>
   );
 }

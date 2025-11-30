@@ -10,6 +10,8 @@ import GroupSettingsSection from "../components/GroupSettingsSection";
 import MemberDetailModal from "../components/MemberDetailModal";
 import Button from "../components/Button";
 import { DollarSign, Mail, Pointer, Settings, User } from "lucide-react";
+import ErrorMessage from "../components/ErrorMessage";
+import { useError } from "../hooks/useError";
 
 const GroupDashboard = () => {
   const location = useLocation();
@@ -24,7 +26,8 @@ const GroupDashboard = () => {
   const [activeSection, setActiveSection] = useState("balances");
   const [selectedMember, setSelectedMember] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // const [error, setError] = useState(null);
+  const { error: error, setError, clearError } = useError();
   const [currentUser, setCurrentUser] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState({
@@ -187,8 +190,17 @@ const GroupDashboard = () => {
 
   if (error)
     return (
+      // <div className="flex items-center justify-center min-h-screen">
+      //   <div className="text-red-500 text-lg">{error}</div>
+      // </div>
+
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-lg">{error}</div>
+        <ErrorMessage
+          error={error}
+          onDismiss={clearError}
+          autoDismiss={true}
+          dismissTime={5000}
+        />
       </div>
     );
 
