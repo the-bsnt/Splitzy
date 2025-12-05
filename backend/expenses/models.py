@@ -31,6 +31,16 @@ class ExpensesParticipants(models.Model):
     # edit the model to make split with percentage. for now split is equal here
 
 
+class ExpenseBalances(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    expense_id = models.ForeignKey(Expenses, on_delete=models.CASCADE)
+    member_id = models.ForeignKey(Membership, on_delete=models.CASCADE)
+    balance = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return f"{self.expense_id.title}-{self.member_id.name}-share={self.balance}"
+
+
 class TransactionRecords(models.Model):
     """
     Model to record expected transactions as result of any expense.

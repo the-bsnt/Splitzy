@@ -17,7 +17,7 @@ urlpatterns = [
     path(
         "groups/<uuid:pk>/expenses/<uuid:id>/",
         ExpenseDetailView.as_view(),
-        name="expense-create",
+        name="expense-create-update",
     ),
     path("groups/<uuid:pk>/balances/", GroupBalanceView.as_view(), name="balances"),
     path(

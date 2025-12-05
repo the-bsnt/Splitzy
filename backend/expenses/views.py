@@ -8,10 +8,17 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from groups.models import Groups, Membership
 
-from .models import Expenses, ExpensesParticipants, GroupBalances, TransactionRecords
+from .models import (
+    Expenses,
+    ExpensesParticipants,
+    ExpenseBalances,
+    GroupBalances,
+    TransactionRecords,
+)
 from .serializers import (
     ExpensesSerializer,
     ExpensesDetailSerializer,
+    ExpenseBalanceSerializer,
     TransactionRecordsSerializer,
     GroupBalancesSerializer,
     RecordPaymentSerializer,
@@ -104,6 +111,13 @@ class ExpensesView(
             for p in participants:
                 balances[p.member_id.id] = p.paid_amt - share
 
+        # record Expense Balances
+        for m, bal in balances.items():
+            data = {"expense_id": expense_instance.id, "member_id": m, "balance": bal}
+            expense_balance_serializer = ExpenseBalanceSerializer(data=data)
+            if expense_balance_serializer.is_valid(raise_exception=True):
+                expense_balance_serializer.save()
+
         # to record Proposed Settlements
         transactions = min_cash_flow(balances)
         for t in transactions:
@@ -120,17 +134,109 @@ class ExpensesView(
             if group_balance_serializer.is_valid(raise_exception=True):
                 group_balance_serializer.save()
 
-            # alternate plan we have balances;  contruct transction table for settlement each expense ; use same balance to update summary table; now extract balances from summary table, apply min_max and display to user
 
-
-class ExpenseDetailView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+class ExpenseDetailView(
+    generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin
+):
     queryset = Expenses.objects.all()
     serializer_class = ExpensesDetailSerializer
     lookup_field = "id"
     permission_classes = [IsAuthenticated, IsGroupMember]
 
+    def get_serializer_class(self):
+        if self.request.method == "PUT":
+            return ExpensesSerializer
+        return super().get_serializer_class()
+
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        old_expense_instance = self.get_object()
+        old_balances = self.get_old_balances(old_expense_instance)
+        # reverse the sign of all balance values
+        old_balances = {m_id: -bal for m_id, bal in old_balances.items()}
+
+        # delete old transactions saved.
+        TransactionRecords.objects.filter(expense_id=old_expense_instance.id).delete()
+
+        new_instance = serializer.save()
+        new_balances = self.get_balance_dict(new_instance)
+
+        # create new Proposed transactions.
+        transactions = min_cash_flow(new_balances)
+        self.record_proposed_transactions(transactions, new_instance)
+
+        # update Expense Balances
+        self.update_expense_balance(old_expense_instance, new_balances)
+        # update Group Balances;
+        group = old_expense_instance.group_id
+        self.update_group_balances(old_balances, group)
+        self.update_group_balances(new_balances, group)
+
+    def get_old_balances(self, expense_instance):
+        old_balances = ExpenseBalances.objects.filter(expense_id=expense_instance)
+        balance_dict = {obj.member_id.id: obj.balance for obj in old_balances}
+        return balance_dict
+
+    def update_expense_balance(self, expense_instance, new_balances):
+        # delete balance for unsent participants
+        existing_balances = [
+            obj.member_id for obj in expense_instance.expensebalances_set.all()
+        ]
+        new_balances_list = list(new_balances.keys())
+        for m in existing_balances:
+            if m not in new_balances_list:
+                ExpenseBalances.objects.filter(
+                    expense_id=expense_instance, member_id=m
+                ).delete()
+
+        for m, bal in new_balances.items():
+            data = {"expense_id": expense_instance.id, "member_id": m, "balance": bal}
+            expense_balance_serializer = ExpenseBalanceSerializer(data=data)
+            if expense_balance_serializer.is_valid(raise_exception=True):
+                expense_balance_serializer.save()
+
+    def record_proposed_transactions(self, transactions, expense_instance):
+        for t in transactions:
+            t["expense_id"] = expense_instance.id
+            # t["recorded_by"] = self.request.user.id (no need)
+            settlement_serializer = TransactionRecordsSerializer(data=t)
+            if settlement_serializer.is_valid(raise_exception=True):
+                settlement_serializer.save()
+
+    def get_balance_dict(self, expense_instance):
+        balances = {}
+        group = expense_instance.group_id
+        participants = expense_instance.expensesparticipants_set.all()
+        # split equally and all
+        if not participants:
+            members = group.membership_set.all()
+            share = expense_instance.amount / members.count()
+            for m in members:
+                balances[m.id] = -share
+            balances[expense_instance.paid_by.id] += expense_instance.amount
+        # split between participants equally;
+        else:
+            share = expense_instance.amount / participants.count()
+            for p in participants:
+                balances[p.member_id.id] = p.paid_amt - share
+        return balances
+
+    def update_group_balances(self, balances, group):
+        for m, bal in balances.items():
+            data = {
+                "group_id": group.id,
+                "member_id": m,
+                "balance": bal,
+            }
+            group_balance_serializer = GroupBalancesSerializer(data=data)
+            if group_balance_serializer.is_valid(raise_exception=True):
+                group_balance_serializer.save()
 
 
 class GroupBalanceView(generics.GenericAPIView, mixins.ListModelMixin):
