@@ -17,6 +17,7 @@ import Logo from "./components/Logo";
 import ExpenseDetail from "./pages/ExpenseDetail";
 import NotFound from "./pages/NotFound";
 import ServerError from "./pages/ServerError";
+import GroupTransactionHistoryPage from "./pages/GroupTransactionHistoryPage";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -27,6 +28,10 @@ const router = createBrowserRouter(
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="accept-invitation" element={<AcceptInvitation />} />
       <Route path="group/:groupName" element={<GroupDashboard />} />
+      <Route
+        path="/group/:groupName/transaction-history"
+        element={<GroupTransactionHistoryPage />}
+      />
       <Route
         path="group/:groupName/expense/:expenseTitle"
         element={<ExpenseDetail />}

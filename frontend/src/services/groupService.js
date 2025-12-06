@@ -30,4 +30,8 @@ export const groupService = {
   acceptInvitation: (token) => api.post(`/groups/join/?token=${token}`),
   rejectInvitation: (token) => api.post(`/groups/join/?token=${token}`),
   listInvitationsForUser: () => api.get("groups/invitations/"),
+
+  //Transcation-History
+  groupTransactionHistory: (groupId) =>
+    api.get(`/groups/${groupId}/transaction/history/`),
 };
