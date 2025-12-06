@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Button from "./Button";
 import { expenseService } from "../services/expenseService";
+import { CircleDollarSignIcon } from "lucide-react";
 
 const BalancesSection = ({
   groupId,
@@ -28,9 +29,12 @@ const BalancesSection = ({
   };
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        Group Balances
-      </h2>
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 mb-5">
+        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+          <CircleDollarSignIcon className="w-5 h-5" />
+          Group Balances
+        </h2>
+      </div>
 
       {/* Current Balances */}
       <div className="mb-8">

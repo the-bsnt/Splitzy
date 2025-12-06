@@ -3,6 +3,14 @@ import { groupService } from "../services/groupService";
 import { authService } from "../services/authService";
 import { NavLink, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
+import {
+  Users,
+  Calendar,
+  FileText,
+  User,
+  History,
+  ChevronRight,
+} from "lucide-react";
 const GroupDetailsSection = ({
   group,
   members,
@@ -56,41 +64,103 @@ const GroupDetailsSection = ({
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      {/* Section Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">Group Details</h2>
+      {/* Header with gradient */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+          <Users className="w-5 h-5" />
+          Group Details
+        </h2>
       </div>
 
-      {/* Group Info */}
-      <div className="space-y-3 mb-6">
-        <p className="text-sm text-gray-600">
-          <span className="font-medium">Admin:</span> {adminName}
-        </p>
-        <p className="text-sm text-gray-600">
-          <span className="font-medium">Members:</span> {members.length}
-        </p>
-        <p className="text-sm text-gray-600">
-          <span className="font-medium">Created:</span>{" "}
-          {new Date(group?.created_at).toLocaleDateString()}
-        </p>
-        <p className="text-sm text-gray-600">
-          <span className="font-medium">Description:</span> {group?.description}
-        </p>
-        <div>
-          <Button variant="outline">
-            <NavLink
-              to={`transaction-history`}
-              state={{
-                groupId: group?.id,
-                groupName: group?.name,
-              }}
-            >
-              Transaction History
-            </NavLink>
-          </Button>
+      {/* Content */}
+      <div className="p-6 space-y-4">
+        {/* Info Grid */}
+        <div className="grid gap-3">
+          {/* Admin */}
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div className="mt-0.5 p-2 bg-blue-100 rounded-lg">
+              <User className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                Admin
+              </p>
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {adminName}
+              </p>
+            </div>
+          </div>
+
+          {/* Members Count */}
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div className="mt-0.5 p-2 bg-green-100 rounded-lg">
+              <Users className="w-4 h-4 text-green-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                Members
+              </p>
+              <p className="text-sm font-medium text-gray-900">
+                {members.length} {members.length === 1 ? "member" : "members"}
+              </p>
+            </div>
+          </div>
+
+          {/* Created Date */}
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div className="mt-0.5 p-2 bg-purple-100 rounded-lg">
+              <Calendar className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                Created
+              </p>
+              <p className="text-sm font-medium text-gray-900">
+                {new Date(group?.created_at).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
+
+          {/* Description */}
+          {group?.description && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+              <div className="mt-0.5 p-2 bg-orange-100 rounded-lg">
+                <FileText className="w-4 h-4 text-orange-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Description
+                </p>
+                <p className="text-sm text-gray-900 leading-relaxed">
+                  {group.description}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Transaction History Button */}
+        <div className="pt-2">
+          <NavLink
+            to="transaction-history"
+            state={{
+              groupId: group?.id,
+              groupName: group?.name,
+            }}
+            className="flex items-center justify-between w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all shadow-sm hover:shadow-md group"
+          >
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4" />
+              <span className="font-medium">Transaction History</span>
+            </div>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </NavLink>
         </div>
       </div>
-
       {/* Members Section */}
       <div>
         <div className="flex justify-between items-center mb-4">

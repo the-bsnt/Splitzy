@@ -144,7 +144,7 @@ class MembersDetailView(
     def perform_destroy(self, instance):
         Invitation.objects.filter(
             invited_email=instance.email, group_id=instance.group_id
-        ).first().delete()
+        ).delete()
 
         return super().perform_destroy(instance)
 

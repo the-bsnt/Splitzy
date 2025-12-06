@@ -7,6 +7,8 @@ export const expenseService = {
   listExpense: (groupId) => api.get(`/groups/${groupId}/expenses/`),
   getExpense: (groupId, expenseId) =>
     api.get(`/groups/${groupId}/expenses/${expenseId}/`),
+  editExpense: (groupId, expenseId, expenseData) =>
+    api.put(`/groups/${groupId}/expenses/${expenseId}/`, expenseData),
   // Balances & Settlements
   getBalances: (groupId) => api.get(`/groups/${groupId}/balances/`),
   recordPayment: (groupId, paymentData) =>

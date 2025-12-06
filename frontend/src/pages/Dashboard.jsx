@@ -25,7 +25,7 @@ import PasswordField from "../components/PasswordField";
 import api from "../api/axios";
 import { groupService } from "../services/groupService";
 import { useNotification } from "../hooks/notification";
-import NotificationContainer from "../components/Noticification";
+import NotificationContainer from "../components/Notification";
 import { useError } from "../hooks/useError";
 import { API_BASE_URL } from "../api/endpoints";
 
@@ -173,7 +173,7 @@ function Dashboard() {
         setShowCreateGroup(false);
         setGroupName("");
         setGroupDescription("");
-        //Success Noticification
+        //Success Notification
 
         addNotification("Group Created successfully!", "success");
 

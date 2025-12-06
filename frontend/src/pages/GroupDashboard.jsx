@@ -13,7 +13,7 @@ import { DollarSign, Mail, Pointer, Settings, User } from "lucide-react";
 import ErrorMessage from "../components/ErrorMessage";
 import { useError } from "../hooks/useError";
 import { useNotification } from "../hooks/notification";
-import NotificationContainer from "../components/Noticification";
+import NotificationContainer from "../components/Notification";
 
 const GroupDashboard = () => {
   const location = useLocation();
