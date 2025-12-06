@@ -160,3 +160,11 @@ class LogoutView(APIView):
         response = Response({"detail": "Logged out successfully."})
         response.delete_cookie("refresh_token")
         return response
+
+
+class CustomUsersListView(generics.GenericAPIView, mixins.ListModelMixin):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)

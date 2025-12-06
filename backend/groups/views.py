@@ -141,6 +141,13 @@ class MembersDetailView(
 
         return self.destroy(request, *args, **kwargs)
 
+    def perform_destroy(self, instance):
+        Invitation.objects.filter(
+            invited_email=instance.email, group_id=instance.group_id
+        ).first().delete()
+
+        return super().perform_destroy(instance)
+
 
 class InvitationView(APIView):
     permission_classes = [IsAuthenticated, IsGroupAdmin]

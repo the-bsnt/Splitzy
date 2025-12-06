@@ -66,7 +66,7 @@ export default function AcceptInvitation() {
     } catch (error) {
       setStatus("error");
       setMessage("Network error. Please check your connection and try again.");
-      console.error("Invitation acceptance error:", error);
+      // console.error("Invitation acceptance error:", error);
     }
   };
 

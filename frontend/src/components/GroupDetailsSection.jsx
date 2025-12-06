@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { groupService } from "../services/groupService";
 import { authService } from "../services/authService";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 const GroupDetailsSection = ({
   group,
@@ -76,6 +76,19 @@ const GroupDetailsSection = ({
         <p className="text-sm text-gray-600">
           <span className="font-medium">Description:</span> {group?.description}
         </p>
+        <div>
+          <Button variant="outline">
+            <NavLink
+              to={`transaction-history`}
+              state={{
+                groupId: group?.id,
+                groupName: group?.name,
+              }}
+            >
+              Transaction History
+            </NavLink>
+          </Button>
+        </div>
       </div>
 
       {/* Members Section */}

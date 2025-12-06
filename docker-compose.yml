@@ -34,6 +34,7 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     depends_on:
+      - api
       - postgres-db
     networks:
       - splitzy # Use the correct network name

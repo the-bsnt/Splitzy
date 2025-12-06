@@ -11,6 +11,7 @@ from .views import (
     RefreshTokenView,
     LoginView,
     LogoutView,
+    CustomUsersListView,
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("profile/", ProfileView.as_view(), name="user_profile"),
     path("change/password/", PasswordChangeView.as_view(), name="change-password"),
+    path("users/", CustomUsersListView.as_view(), name="list-users"),
 ]

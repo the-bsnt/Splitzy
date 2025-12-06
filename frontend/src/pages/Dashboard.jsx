@@ -26,6 +26,8 @@ import api from "../api/axios";
 import { groupService } from "../services/groupService";
 import { useNotification } from "../hooks/notification";
 import NotificationContainer from "../components/Noticification";
+import { useError } from "../hooks/useError";
+import { API_BASE_URL } from "../api/endpoints";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -50,6 +52,7 @@ function Dashboard() {
   const [reload, setReload] = useState(false);
   const { notifications, addNotification, removeNotification } =
     useNotification();
+  const { error: error, setError, clearError } = useError();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,7 +60,7 @@ function Dashboard() {
         const res = await authService.profile();
         setUser(res.data);
       } catch (err) {
-        console.error("Unauthorized or expired token", err);
+        // console.error("Unauthorized or expired token", err);
         navigate("/login");
       } finally {
         setLoading(false);
@@ -73,7 +76,8 @@ function Dashboard() {
         const response = await api.get("/groups/");
         setGroups(response.data);
       } catch (err) {
-        console.error("Failed to fetch groups", err);
+        // console.error("Failed to fetch groups", err);
+        setError("Failed to fetch groups!");
       } finally {
         setReload(false);
         setLoadingGroups(false);
@@ -91,7 +95,8 @@ function Dashboard() {
         const response = await groupService.listInvitationsForUser();
         setInvitations(response.data);
       } catch (err) {
-        console.error("Failed to fetch invitations", err);
+        // console.error("Failed to fetch invitations", err);
+        setError("Failed to fetch invitations!");
       } finally {
         setLoadingInvitations(false);
         setReload(false);
@@ -107,7 +112,7 @@ function Dashboard() {
       localStorage.removeItem("access");
       navigate("/login");
     } catch (err) {
-      console.error("Logout failed", err);
+      // console.error("Logout failed", err);
     }
   };
   const handlePasswordChange = async (e) => {
@@ -121,20 +126,17 @@ function Dashboard() {
     }
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/change/password/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-          body: JSON.stringify({
-            old_password: passwordForm.old_password,
-            new_password: passwordForm.new_password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/change/password/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access")}`,
+        },
+        body: JSON.stringify({
+          old_password: passwordForm.old_password,
+          new_password: passwordForm.new_password,
+        }),
+      });
 
       if (response.ok) {
         setPasswordSuccess("Password changed successfully!");
@@ -192,7 +194,7 @@ function Dashboard() {
       setReload(true);
       addNotification("Invitation Accepted!", "success");
     } catch (err) {
-      console.error("Failed to accept invitation", err);
+      // console.error("Failed to accept invitation", err);
       addNotification("Something went wrong!", "error");
     }
   };
@@ -203,7 +205,7 @@ function Dashboard() {
       setReload(true);
       addNotification("Invitation Rejected!", "success");
     } catch (err) {
-      console.error("Failed to reject invitation", err);
+      // console.error("Failed to reject invitation", err);
       addNotification("Something went wrong!", "error");
     }
   };
@@ -218,7 +220,17 @@ function Dashboard() {
       </div>
     );
   }
-
+  if (error)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <ErrorMessage
+          error={error}
+          onDismiss={clearError}
+          autoDismiss={true}
+          dismissTime={5000}
+        />
+      </div>
+    );
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100">
       {/* Navbar */}
