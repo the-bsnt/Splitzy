@@ -28,7 +28,7 @@ function Profile() {
         setUser(res.data);
         setError(null);
       } catch (err) {
-        console.error("Unauthorized or expired token", err);
+        // console.error("Unauthorized or expired token", err);
         setError("Unauthorized or expired token");
       } finally {
         setLoading(false);
@@ -124,7 +124,7 @@ function Profile() {
       alert("Password changed successfully!");
       navigate("/dashboard");
     } catch (err) {
-      console.error("Password change failed", err);
+      // console.error("Password change failed", err);
       // Display API error
       const errorMessage =
         err.response?.data?.message ||

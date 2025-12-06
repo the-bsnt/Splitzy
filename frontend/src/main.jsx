@@ -15,6 +15,9 @@ import AcceptInvitation from "./pages/AcceptInvitation";
 import GroupDashboard from "./pages/GroupDashboard";
 import Logo from "./components/Logo";
 import ExpenseDetail from "./pages/ExpenseDetail";
+import NotFound from "./pages/NotFound";
+import ServerError from "./pages/ServerError";
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route>
@@ -29,6 +32,9 @@ const router = createBrowserRouter(
         element={<ExpenseDetail />}
       />
       <Route path="public/logo" element={<Logo />} />
+      <Route path="/400" element={<NotFound />} />
+      <Route path="/500" element={<ServerError />} />
+      <Route path="*" element={<NotFound />} />
     </Route>
   )
 );

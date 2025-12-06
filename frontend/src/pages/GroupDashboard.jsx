@@ -46,7 +46,7 @@ const GroupDashboard = () => {
         const res = await authService.profile();
         setCurrentUser(res.data);
       } catch (err) {
-        console.error("Unauthorized or expired token", err);
+        // console.error("Unauthorized or expired token", err);
         navigate("/login");
       }
     };
@@ -126,7 +126,7 @@ const GroupDashboard = () => {
       setMembers((prev) => [...prev, response.data]);
       addNotification("Member Added Successfully!", "success");
     } catch (err) {
-      console.error("Error adding member:", err);
+      // console.error("Error adding member:", err);
       addNotification("Failed to add member!", "error");
     }
   };
@@ -140,8 +140,12 @@ const GroupDashboard = () => {
       await loadExpenseData();
       addNotification("New Expense Added Successfully!", "success");
     } catch (err) {
-      console.error("Error adding expense:", err);
-      addNotification("Failed to Add Expense!", "error");
+      // console.error("Error adding expense:", err);
+      if (err.response.data.non_field_errors) {
+        addNotification(err.response.data.non_field_errors, "error");
+      } else {
+        addNotification("Failed to Add Expense!", "error");
+      }
     }
   };
 
@@ -162,8 +166,12 @@ const GroupDashboard = () => {
         payment: "",
       });
     } catch (err) {
-      addNotification("Failed to Record payment!", "error");
-      console.error("Error recording payment:", err);
+      if (err.response.data.payment) {
+        addNotification(err.response.data.payment, "error");
+      } else {
+        addNotification("Failed to Record payment!", "error");
+      }
+      // console.error("Error recording payment:", err);
     }
   };
   //function to get memberobject
@@ -178,7 +186,7 @@ const GroupDashboard = () => {
       navigate("/login");
     } catch (err) {
       addNotification("Something went wrong!", "error");
-      console.error("Logout failed", err);
+      // console.error("Logout failed", err);
     }
   };
 

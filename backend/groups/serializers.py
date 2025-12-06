@@ -81,5 +81,5 @@ class InvitationSerializer(serializers.ModelSerializer):
             if (
                 invitation.status != "E"
             ):  # check existing invitation is pending or accepted.
-                raise serializers.ValidationError("Invitation Already Sent")
+                raise serializers.ValidationError("Invitation Already Sent or Accepted")
         return super().validate(attrs)

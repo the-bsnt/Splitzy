@@ -26,7 +26,7 @@ const ExpenseDetail = () => {
         setExpense(expenseRes.data);
       } catch (err) {
         setError("Failed to fetch expense details");
-        console.error("Error fetching expense:", err);
+        // console.error("Error fetching expense:", err);
       } finally {
         setLoading(false);
       }
