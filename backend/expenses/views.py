@@ -334,3 +334,19 @@ class TransactionRecordsView(generics.GenericAPIView, mixins.ListModelMixin):
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+
+class GroupTransactionHistoryView(generics.GenericAPIView, mixins.ListModelMixin):
+    permission_classes = [IsAuthenticated, IsGroupMember]
+
+    queryset = TransactionRecords.objects.all()
+    serializer_class = TransactionRecordsSerializer
+    lookup_field = "pk"
+
+    def get_queryset(self):
+        group_id = self.kwargs.get("pk")
+        qs = super().get_queryset()
+        return qs.filter(group_id=group_id, type="A")
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
