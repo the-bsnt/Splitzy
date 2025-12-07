@@ -44,6 +44,9 @@ api.interceptors.response.use(
   (response) => response, // If response OK, just return it
   async (error) => {
     const originalRequest = error.config;
+    if (originalRequest.url.includes("/auth/")) {
+      return Promise.reject(error);
+    }
 
     if (error.response.status === 500) {
       window.location.href = "/500";

@@ -96,8 +96,9 @@ class PasswordChangeView(APIView):
                     return Response(
                         {"error": "Refresh token not found"},
                         status=status.HTTP_401_UNAUTHORIZED,
-                    )  # RefreshToken takes base64_encoded_token_string , Parses it (encoded refresh token string) into a RefreshToken object
-                    # print(token)
+                    )
+                token = RefreshToken(token)
+                # RefreshToken takes base64_encoded_token_string , Parses it (encoded refresh token string) into a RefreshToken object
 
                 user = request.user
                 if user.check_password(old_password):
