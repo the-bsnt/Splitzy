@@ -159,7 +159,7 @@ from datetime import timedelta
 # SIMPLE JWT CONF
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ["Bearer"],
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=7),
     # "SIGNING_KEY": SECRET_KEY,
 }

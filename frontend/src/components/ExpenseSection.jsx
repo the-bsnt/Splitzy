@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Button from "./Button";
 import { expenseService } from "../services/expenseService";
 import { NavLink } from "react-router-dom";
+import { CheckCircle, DollarSign, PlusCircle, Receipt } from "lucide-react";
 
 const ExpenseSection = ({
   currentUser,
@@ -23,47 +24,135 @@ const ExpenseSection = ({
     participants: [],
   });
 
-  // Reset participants when paid_by changes or when includeParticipants is toggled
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({
+    title: "",
+    paid_by: "",
+    amount: "",
+    participants: "",
+  });
+
+  // When custom participants toggle is enabled/disabled
   useEffect(() => {
     if (includeParticipants && newExpense.paid_by) {
-      // Set paid_by member as default participant
-      const paidByMember = members.find((m) => m.id === newExpense.paid_by);
-      if (
-        paidByMember &&
-        !newExpense.participants.some((p) => p.member_id === newExpense.paid_by)
-      ) {
+      // Ensure payer is in participants when custom participants is enabled
+      const payerInParticipants = newExpense.participants.find(
+        (p) => p.member_id === newExpense.paid_by
+      );
+
+      if (!payerInParticipants) {
+        // Add payer to participants with 0 amount
         setNewExpense((prev) => ({
           ...prev,
           participants: [
+            ...prev.participants,
             {
               member_id: newExpense.paid_by,
-              paid_amt: "",
+              paid_amt: 0,
             },
           ],
         }));
       }
-    } else if (!includeParticipants) {
-      setNewExpense((prev) => ({
-        ...prev,
-        participants: [],
-      }));
     }
-  }, [includeParticipants, newExpense.paid_by, members]);
+  }, [includeParticipants]);
+
+  // When paid_by changes
+  useEffect(() => {
+    if (includeParticipants && newExpense.paid_by) {
+      const payerInParticipants = newExpense.participants.find(
+        (p) => p.member_id === newExpense.paid_by
+      );
+
+      if (!payerInParticipants) {
+        // Add payer to participants
+        setNewExpense((prev) => ({
+          ...prev,
+          participants: [
+            ...prev.participants,
+            {
+              member_id: newExpense.paid_by,
+              paid_amt: 0,
+            },
+          ],
+        }));
+      } else {
+        // Ensure payer's amount is not duplicated
+        // Check if payer appears more than once
+        const payerEntries = newExpense.participants.filter(
+          (p) => p.member_id === newExpense.paid_by
+        );
+
+        if (payerEntries.length > 1) {
+          // Remove duplicates, keep only the first one
+          const seen = new Set();
+          const uniqueParticipants = newExpense.participants.filter((p) => {
+            if (p.member_id === newExpense.paid_by) {
+              if (seen.has(p.member_id)) {
+                return false;
+              }
+              seen.add(p.member_id);
+              return true;
+            }
+            return true;
+          });
+
+          setNewExpense((prev) => ({
+            ...prev,
+            participants: uniqueParticipants,
+          }));
+        }
+      }
+    }
+  }, [newExpense.paid_by, includeParticipants]);
+
+  const validateForm = () => {
+    const errors = {
+      title: "",
+      paid_by: "",
+      amount: "",
+      participants: "",
+    };
+
+    let isValid = true;
+
+    // Validate title
+    if (!newExpense.title.trim()) {
+      errors.title = "Title is required";
+      isValid = false;
+    }
+
+    // Validate paid_by
+    if (!newExpense.paid_by) {
+      errors.paid_by = "Please select who paid";
+      isValid = false;
+    }
+
+    // Validate amount (if not using custom participants)
+    if (!includeParticipants) {
+      if (!newExpense.amount) {
+        errors.amount = "Amount is required";
+        isValid = false;
+      } else if (parseFloat(newExpense.amount) <= 0) {
+        errors.amount = "Amount must be greater than 0";
+        isValid = false;
+      }
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
 
   const handleAddExpense = async () => {
-    // Validation
-    if (!newExpense.title || !newExpense.paid_by) {
-      alert("Please fill in required fields");
-      return;
-    }
+    // Clear previous errors
+    setValidationErrors({
+      title: "",
+      paid_by: "",
+      amount: "",
+      participants: "",
+    });
 
-    if (!includeParticipants && !newExpense.amount) {
-      alert("Please enter an amount");
-      return;
-    }
-
-    if (includeParticipants && newExpense.participants.length === 0) {
-      alert("Please select at least one participant");
+    // Validate form
+    if (!validateForm()) {
       return;
     }
 
@@ -73,19 +162,30 @@ const ExpenseSection = ({
       paid_by: newExpense.paid_by,
     };
 
-    // Only add amount if not using custom participants or if amount is provided
-    if (newExpense.amount) {
+    // Include amount if not using custom participants
+    if (!includeParticipants) {
       expenseData.amount = parseFloat(newExpense.amount);
-    }
+    } else {
+      // Remove duplicate participants before sending
+      const uniqueParticipants = [];
+      const seenMemberIds = new Set();
 
-    // Only add participants if user chose to include them
-    if (includeParticipants && newExpense.participants.length > 0) {
-      expenseData.participants = newExpense.participants
-        .filter((p) => p.paid_amt) // Only include participants with paid_amt
-        .map((p) => ({
-          member_id: p.member_id,
-          paid_amt: parseFloat(p.paid_amt),
-        }));
+      newExpense.participants.forEach((p) => {
+        if (!seenMemberIds.has(p.member_id)) {
+          seenMemberIds.add(p.member_id);
+          uniqueParticipants.push({
+            member_id: p.member_id,
+            paid_amt: parseFloat(p.paid_amt) || 0,
+          });
+        }
+      });
+
+      expenseData.participants = uniqueParticipants;
+
+      // Include amount if provided (optional)
+      if (newExpense.amount) {
+        expenseData.amount = parseFloat(newExpense.amount);
+      }
     }
 
     await onAddExpense(expenseData);
@@ -103,61 +203,125 @@ const ExpenseSection = ({
   };
 
   const handleParticipantToggle = (memberId) => {
-    setNewExpense((prev) => {
-      const exists = prev.participants.some((p) => p.member_id === memberId);
+    const isPaidBy = memberId === newExpense.paid_by;
+    if (isPaidBy) return; // Don't allow toggling the payer
 
-      if (exists) {
-        // Remove participant (but don't allow removing paid_by member)
-        if (memberId === prev.paid_by) return prev;
-        return {
-          ...prev,
-          participants: prev.participants.filter(
-            (p) => p.member_id !== memberId
-          ),
-        };
-      } else {
-        // Add participant
-        return {
-          ...prev,
-          participants: [
-            ...prev.participants,
-            { member_id: memberId, paid_amt: "" },
-          ],
-        };
-      }
+    const existingIndex = newExpense.participants.findIndex(
+      (p) => p.member_id === memberId
+    );
+
+    const updatedParticipants = [...newExpense.participants];
+
+    if (existingIndex >= 0) {
+      // Remove participant
+      updatedParticipants.splice(existingIndex, 1);
+    } else {
+      // Add participant with 0 amount
+      updatedParticipants.push({
+        member_id: memberId,
+        paid_amt: 0,
+      });
+    }
+
+    setNewExpense({
+      ...newExpense,
+      participants: updatedParticipants,
     });
   };
 
-  const handleParticipantAmountChange = (memberId, amount) => {
-    setNewExpense((prev) => ({
-      ...prev,
-      participants: prev.participants.map((p) =>
-        p.member_id === memberId ? { ...p, paid_amt: amount } : p
-      ),
-    }));
+  const handleParticipantAmountChange = (memberId, value) => {
+    // Handle empty string
+    if (value === "") {
+      const updatedParticipants = newExpense.participants.map((p) => {
+        if (p.member_id === memberId) {
+          return { ...p, paid_amt: "" };
+        }
+        return p;
+      });
+
+      setNewExpense({
+        ...newExpense,
+        participants: updatedParticipants,
+      });
+      return;
+    }
+
+    // Convert to number, handle decimals properly
+    const numValue = parseFloat(value);
+    const amount = isNaN(numValue) ? 0 : numValue;
+
+    // First, remove any duplicates for this member
+    const seen = new Set();
+    const deduplicatedParticipants = newExpense.participants.filter((p) => {
+      if (p.member_id === memberId) {
+        if (seen.has(p.member_id)) {
+          return false;
+        }
+        seen.add(p.member_id);
+        return true;
+      }
+      return true;
+    });
+
+    // Now update the amount for this member
+    const updatedParticipants = deduplicatedParticipants.map((p) => {
+      if (p.member_id === memberId) {
+        return { ...p, paid_amt: amount };
+      }
+      return p;
+    });
+
+    setNewExpense({
+      ...newExpense,
+      participants: updatedParticipants,
+    });
+  };
+
+  // Format amount input for display (show empty string for empty/0)
+  const formatAmountForDisplay = (amount, memberId) => {
+    if (amount === "" || amount === 0 || amount === "0" || amount === 0.0) {
+      return "";
+    }
+    return amount.toString();
   };
 
   const getMemberObject = function (mId) {
     return members.find((m) => m.id == mId);
   };
 
-  // expenses.forEach((element) => {
-  //   console.log(element);
-  // });
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      {/* Section Header */}
-      <h2 className="text-xl font-semibold text-gray-900">Expenses</h2>
-      <div className="flex justify-end items-center mb-6 mt-4">
-        <div className="flex space-x-3">
-          <Button variant="green" onClick={() => onRecordPayment()}>
+      {/* Header with gradient */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+            <Receipt className="w-5 h-5" />
+            Expenses
+          </h2>
+          <div className="flex items-center gap-2 text-white/90 text-sm">
+            <DollarSign className="w-4 h-4" />
+            <span className="font-medium">Track & Manage</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+        <div className="flex justify-end items-center gap-3">
+          <Button
+            variant="green"
+            onClick={() => onRecordPayment()}
+            className="flex items-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md group"
+          >
+            <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
             Record Payment
           </Button>
           <Button
             variant="red"
             onClick={() => setShowAddExpense(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all shadow-sm hover:shadow-md group"
           >
+            <PlusCircle className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             Add Expense
           </Button>
         </div>
@@ -280,6 +444,7 @@ const ExpenseSection = ({
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Add New Expense</h3>
             <div className="space-y-4">
+              {/* Title Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Title *
@@ -288,13 +453,26 @@ const ExpenseSection = ({
                   type="text"
                   placeholder="Expense title"
                   value={newExpense.title}
-                  onChange={(e) =>
-                    setNewExpense({ ...newExpense, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    setNewExpense({ ...newExpense, title: e.target.value });
+                    if (validationErrors.title) {
+                      setValidationErrors((prev) => ({ ...prev, title: "" }));
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    validationErrors.title
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
+                {validationErrors.title && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {validationErrors.title}
+                  </p>
+                )}
               </div>
 
+              {/* Description Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -313,16 +491,25 @@ const ExpenseSection = ({
                 />
               </div>
 
+              {/* Paid By Field */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Paid By *
                 </label>
                 <select
                   value={newExpense.paid_by}
-                  onChange={(e) =>
-                    setNewExpense({ ...newExpense, paid_by: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => {
+                    const paidByValue = e.target.value;
+                    setNewExpense({ ...newExpense, paid_by: paidByValue });
+                    if (validationErrors.paid_by) {
+                      setValidationErrors((prev) => ({ ...prev, paid_by: "" }));
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    validationErrors.paid_by
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 >
                   <option value="">Select who paid</option>
                   {members.map((member) => (
@@ -331,6 +518,11 @@ const ExpenseSection = ({
                     </option>
                   ))}
                 </select>
+                {validationErrors.paid_by && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {validationErrors.paid_by}
+                  </p>
+                )}
               </div>
 
               {/* Toggle for custom participants */}
@@ -339,7 +531,39 @@ const ExpenseSection = ({
                   type="checkbox"
                   id="includeParticipants"
                   checked={includeParticipants}
-                  onChange={(e) => setIncludeParticipants(e.target.checked)}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setIncludeParticipants(isChecked);
+                    if (!isChecked) {
+                      // Clear participants when disabling custom participants
+                      setNewExpense((prev) => ({
+                        ...prev,
+                        participants: [],
+                      }));
+                    } else if (newExpense.paid_by) {
+                      // Add payer when enabling custom participants
+                      const payerInParticipants = newExpense.participants.find(
+                        (p) => p.member_id === newExpense.paid_by
+                      );
+
+                      if (!payerInParticipants) {
+                        setNewExpense((prev) => ({
+                          ...prev,
+                          participants: [
+                            ...prev.participants,
+                            {
+                              member_id: newExpense.paid_by,
+                              paid_amt: 0,
+                            },
+                          ],
+                        }));
+                      }
+                    }
+                    // Clear amount error when toggling
+                    if (validationErrors.amount) {
+                      setValidationErrors((prev) => ({ ...prev, amount: "" }));
+                    }
+                  }}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label
@@ -359,14 +583,30 @@ const ExpenseSection = ({
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     placeholder="0.00"
                     value={newExpense.amount}
                     onWheel={(e) => e.target.blur()}
-                    onChange={(e) =>
-                      setNewExpense({ ...newExpense, amount: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      setNewExpense({ ...newExpense, amount: e.target.value });
+                      if (validationErrors.amount) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          amount: "",
+                        }));
+                      }
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                      validationErrors.amount
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500"
+                    }`}
                   />
+                  {validationErrors.amount && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {validationErrors.amount}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -387,6 +627,7 @@ const ExpenseSection = ({
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
                       placeholder="0.00"
                       value={newExpense.amount}
                       onWheel={(e) => e.target.blur()}
@@ -399,9 +640,11 @@ const ExpenseSection = ({
 
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {members.map((member) => {
-                      const participant = newExpense.participants.find(
+                      const payerEntries = newExpense.participants.filter(
                         (p) => p.member_id === member.id
                       );
+                      const participant =
+                        payerEntries.length > 0 ? payerEntries[0] : null;
                       const isSelected = !!participant;
                       const isPaidBy = member.id === newExpense.paid_by;
 
@@ -412,7 +655,7 @@ const ExpenseSection = ({
                         >
                           <input
                             type="checkbox"
-                            checked={isSelected}
+                            checked={isSelected || isPaidBy}
                             onChange={() => handleParticipantToggle(member.id)}
                             disabled={isPaidBy}
                             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -425,12 +668,16 @@ const ExpenseSection = ({
                               </span>
                             )}
                           </span>
-                          {isSelected && (
+                          {(isSelected || isPaidBy) && (
                             <input
                               type="number"
                               step="0.01"
+                              min="0"
                               placeholder="0.00"
-                              value={participant.paid_amt}
+                              value={formatAmountForDisplay(
+                                participant?.paid_amt || 0,
+                                member.id
+                              )}
                               onChange={(e) =>
                                 handleParticipantAmountChange(
                                   member.id,
@@ -438,6 +685,12 @@ const ExpenseSection = ({
                                 )
                               }
                               onWheel={(e) => e.target.blur()}
+                              onKeyDown={(e) => {
+                                // Prevent multiple zeros at the beginning
+                                if (e.key === "0" && e.target.value === "0") {
+                                  e.preventDefault();
+                                }
+                              }}
                               className="w-32 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                           )}
@@ -445,12 +698,38 @@ const ExpenseSection = ({
                       );
                     })}
                   </div>
+
+                  {/* Show total of participant amounts */}
+                  {newExpense.participants.length > 0 && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          Total from participants:
+                        </span>
+                        <span className="text-lg font-bold text-green-600">
+                          $
+                          {newExpense.participants
+                            .reduce((sum, p, index, array) => {
+                              // Only count each member once
+                              const firstIndex = array.findIndex(
+                                (item) => item.member_id === p.member_id
+                              );
+                              return firstIndex === index
+                                ? sum + (parseFloat(p.paid_amt) || 0)
+                                : sum;
+                            }, 0)
+                            .toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
                   type="button"
+                  style={{ cursor: "pointer" }}
                   onClick={() => {
                     setShowAddExpense(false);
                     setIncludeParticipants(false);
@@ -460,6 +739,12 @@ const ExpenseSection = ({
                       amount: "",
                       paid_by: "",
                       participants: [],
+                    });
+                    setValidationErrors({
+                      title: "",
+                      paid_by: "",
+                      amount: "",
+                      participants: "",
                     });
                   }}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"

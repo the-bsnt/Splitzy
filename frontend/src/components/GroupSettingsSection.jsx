@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { groupService } from "../services/groupService";
-import { AlertTriangle, LucideEdit, LucideTrash2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  LucideEdit,
+  LucideTrash2,
+  Settings2Icon,
+  X,
+} from "lucide-react";
 import TransferAdmin from "./TransferAdmin";
 import { useNavigate } from "react-router-dom";
 import Button from "./Button";
@@ -123,74 +129,168 @@ const GroupSettingsSection = ({
   };
   return (
     <div className="bg-white rounded-xl shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        Group Settings
-      </h2>
-
-      {/* Group Details Form */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            Group Information
-          </h3>
-          <button
-            onClick={() => setEditingGroup(!editingGroup)}
-            className="text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            {editingGroup ? "Cancel" : "Edit"}
-          </button>
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 mb-5">
+        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+          <Settings2Icon className="w-5 h-5" />
+          Group Settings
+        </h2>
+      </div>
+      {/* Enhanced Group Details Section */}
+      <div className="mb-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Group Information
+              </h3>
+            </div>
+            <button
+              style={{ cursor: "pointer" }}
+              onClick={() => setEditingGroup(!editingGroup)}
+              className={`
+          flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all duration-200
+          ${
+            editingGroup
+              ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+          }
+        `}
+            >
+              {editingGroup ? (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        {editingGroup ? (
-          <div>
-            <form onSubmit={handleUpdateGroup} className="space-y-4">
+        <div className="p-5">
+          {editingGroup ? (
+            <form onSubmit={handleUpdateGroup} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Group Name
-                </label>
-                <input
-                  type="text"
-                  value={groupForm.name}
-                  onChange={(e) =>
-                    setGroupForm({ ...groupForm, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Group Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={groupForm.name}
+                    onChange={(e) =>
+                      setGroupForm({ ...groupForm, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="Enter group name"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2 ">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    value={groupForm.description}
+                    onChange={(e) =>
+                      setGroupForm({
+                        ...groupForm,
+                        description: e.target.value,
+                      })
+                    }
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                    placeholder="Describe your group..."
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={groupForm.description}
-                  onChange={(e) =>
-                    setGroupForm({ ...groupForm, description: e.target.value })
-                  }
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+
+              <div className="flex gap-3">
+                <button
+                  style={{ cursor: "pointer" }}
+                  type="submit"
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setEditingGroup(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Save Changes
-              </button>
             </form>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p>
-              <strong>Name:</strong> {group?.name}
-            </p>
-            <p>
-              <strong>Description:</strong>{" "}
-              {group?.description || "No description"}
-            </p>
-          </div>
-        )}
+          ) : (
+            <div>
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Group Name
+                </p>
+                <p className="text-base font-semibold text-gray-900">
+                  {group?.name || "—"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">
+                  Description
+                </p>
+                <p className="text-gray-700">
+                  {group?.description || (
+                    <span className="text-gray-400 italic">No description</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
       {/* Transfer Admin */}
       <TransferAdmin
         groupForm={groupForm}

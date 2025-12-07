@@ -25,7 +25,7 @@ import PasswordField from "../components/PasswordField";
 import api from "../api/axios";
 import { groupService } from "../services/groupService";
 import { useNotification } from "../hooks/notification";
-import NotificationContainer from "../components/Noticification";
+import NotificationContainer from "../components/Notification";
 import { useError } from "../hooks/useError";
 import { API_BASE_URL } from "../api/endpoints";
 
@@ -124,33 +124,37 @@ function Dashboard() {
       setPasswordError("New passwords don't match");
       return;
     }
+    if (passwordForm.old_password == passwordForm.new_password) {
+      setPasswordError(
+        "The new password cannot be the same as the old password."
+      );
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/change/password/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
-        body: JSON.stringify({
-          old_password: passwordForm.old_password,
-          new_password: passwordForm.new_password,
-        }),
-      });
+      const passwordData = {
+        old_password: passwordForm.old_password,
+        new_password: passwordForm.new_password,
+      };
+      const response = await authService.changePassword(passwordData);
 
-      if (response.ok) {
+      if ((response.status = 200)) {
         setPasswordSuccess("Password changed successfully!");
+        addNotification(response.data.detail, "success");
         setPasswordForm({
           old_password: "",
           new_password: "",
           confirm_password: "",
         });
-      } else {
-        const error = await response.json();
-        setPasswordError(error.message || "Failed to change password");
+        setTimeout(() => {
+          onLogout();
+        }, 3000);
       }
     } catch (err) {
-      setPasswordError("Failed to change password");
+      addNotification("Failed to Change Password!", "error");
+      setPasswordError(error.message || "Failed to change password");
+    } finally {
+      setShowProfile(false);
     }
   };
 
@@ -173,7 +177,7 @@ function Dashboard() {
         setShowCreateGroup(false);
         setGroupName("");
         setGroupDescription("");
-        //Success Noticification
+        //Success Notification
 
         addNotification("Group Created successfully!", "success");
 
@@ -456,13 +460,13 @@ function Dashboard() {
           transition={{ duration: 0.5 }}
           className="bg-white rounded-2xl shadow-lg p-8 mb-8"
         >
-          <div className="flex items-center justify-between relative">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="bg-indigo-100 p-4 rounded-full">
                 <User className="h-8 w-8 text-indigo-600" />
               </div>
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800">
+              <div className="flex-1 sm:flex-none">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
                   Welcome back, {user?.name}!
                 </h2>
                 <p className="text-gray-600 flex items-center gap-2 mt-1">
@@ -470,15 +474,16 @@ function Dashboard() {
                   {user?.email}
                 </p>
               </div>
-              <button
-                onClick={() => setShowProfile(true)}
-                className="absolute top-0 right-0  flex items-center gap-2 bg-indigo-100 hover:bg-indigo-200 px-4 py-2 rounded-lg transition-colors"
-              >
-                {/* Replaced User with Settings icon */}
-                <Settings className="h-5 w-5 text-indigo-600" />
-                <span className="text-indigo-600 font-medium">Profile</span>
-              </button>
             </div>
+
+            <button
+              style={{ cursor: "pointer" }}
+              onClick={() => setShowProfile(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-100 hover:bg-indigo-200 px-4 py-3 sm:py-2 rounded-lg transition-colors"
+            >
+              <Settings className="h-5 w-5 text-indigo-600" />
+              <span className="text-indigo-600 font-medium">Profile</span>
+            </button>
           </div>
         </motion.div>
 
