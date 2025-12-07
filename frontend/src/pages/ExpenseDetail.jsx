@@ -245,6 +245,9 @@ const ExpenseDetail = () => {
     setEditExpenseData({
       ...editExpenseData,
       participants: updatedParticipants,
+      amount: updatedParticipants
+        .reduce((sum, p) => sum + (parseFloat(p.paid_amt) || 0), 0)
+        .toFixed(2),
     });
   };
 
@@ -456,15 +459,15 @@ const ExpenseDetail = () => {
               {expense.title}
             </h1>
 
-            <span
+            <div
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 expense.is_settled
                   ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
+                  : "bg-red-100 text-red-700 opacity-0"
               }`}
             >
               {expense.is_settled ? "Settled" : "Not Settled"}
-            </span>
+            </div>
           </div>
 
           {expense.description && (
@@ -1126,3 +1129,5 @@ const ExpenseDetail = () => {
 };
 
 export default ExpenseDetail;
+
+// NOTE: for expense settled or not remove opacity from like 466
