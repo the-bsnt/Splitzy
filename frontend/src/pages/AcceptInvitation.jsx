@@ -93,7 +93,11 @@ export default function AcceptInvitation() {
     authService.logout();
     localStorage.removeItem("access");
     const currentPath = `/accept-invitation?token=${token}`;
-    navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+    navigate(
+      `/login?redirect=${encodeURIComponent(
+        currentPath
+      )}&email=${encodeURIComponent(invitedEmail)}`
+    );
   };
 
   const handleManualLogin = () => {
