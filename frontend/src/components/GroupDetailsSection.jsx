@@ -18,6 +18,7 @@ const GroupDetailsSection = ({
   onMemberClick,
   onRefresh,
   user,
+  addNotification,
 }) => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMember, setNewMember] = useState({ email: "", name: "" });
@@ -41,16 +42,21 @@ const GroupDetailsSection = ({
       setNewMember({ email: "", name: "" });
       setShowAddMember(false);
     } catch (error) {
-      console.error("Error adding member:", error);
+      // addNotificaton("Error Adding New Member!", "error");
     }
   };
 
   const handleInviteMember = async (memberId) => {
     try {
       await groupService.inviteMember(group.id, memberId);
-      onRefresh();
+      // onRefresh();
+      addNotification("Invitation Sent to Member's Email.", "success");
     } catch (error) {
-      console.error("Error inviting member:", error);
+      if (error.response.data.non_field_errors) {
+        addNotification(error.response.data.non_field_errors, "error");
+      } else {
+        addNotification("Error Inviting Member!", "error");
+      }
     }
   };
   function getGroupNameAdmin(group, members) {
