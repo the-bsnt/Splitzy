@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import PasswordField from "../components/PasswordField";
 import Button from "../components/Button";
 import { authService } from "../services/authService";
@@ -9,8 +14,10 @@ import { useRedirectIfLoggedIn } from "../hooks/useRedirectIfLoggedIn";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
+  const invitedEmail = searchParams.get("email");
 
   useRedirectIfLoggedIn(redirectUrl);
 
@@ -21,6 +28,14 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
+  useEffect(() => {
+    if (redirectUrl) {
+      setFormData((prevData) => ({
+        ...prevData,
+        email: invitedEmail,
+      }));
+    }
+  }, [redirectUrl, invitedEmail]);
   const validate = () => {
     const newErrors = {};
 
@@ -94,7 +109,7 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
-        <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
+        <img src="/splitzy.svg" className="mr-3 h-12" alt="Logo" />
       </nav>
 
       {/* Login Form */}

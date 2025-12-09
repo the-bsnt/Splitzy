@@ -241,7 +241,9 @@ function Dashboard() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-indigo-600">Splitzy</h1>
+            <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
+              <img src="/splitzy.svg" className="mr-3 h-12" alt="Logo" />
+            </nav>
           </div>
           <Button
             variant="ghost"

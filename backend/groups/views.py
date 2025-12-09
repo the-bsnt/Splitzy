@@ -255,6 +255,7 @@ class AcceptInvitationView(APIView):
                 {
                     "code": "AUTH_REQUIRED",
                     "detail": "Login or register to accept invitation.",
+                    "invited_email": email,
                 },
                 status=status.HTTP_401_UNAUTHORIZED,
             )

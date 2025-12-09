@@ -40,8 +40,7 @@ class Invitation(models.Model):
     group_id = models.ForeignKey(Groups, on_delete=models.CASCADE)
     token = models.CharField(max_length=100, unique=True)
     status = models.CharField(max_length=1, choices=STATUS, default="P")
-    invited_by = models.EmailField(null=True)  # you can remove null later
-    # add created_at field(optional)
+    invited_by = models.EmailField()
 
     def __str__(self):
         return f"{self.group_id}-{self.invited_email}-{self.status}"

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 
@@ -62,12 +63,8 @@
             font-size: 16px;
             margin-bottom: 30px;
             transition: transform 0.2s;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            text-decoration: none;
             color: #ffffff;
+
         }
 
         .details-box {
@@ -109,7 +106,7 @@
     <div class="container">
         <!-- Header with Logo -->
         <div class="header">
-            <img src="{{logo_url}}" alt="Splitzy" class="logo">
+            <img src="{% static '/images/splitzy.png' %}" alt="Splitzy" class="logo">
         </div>
 
         <!-- Main Content -->
@@ -127,7 +124,8 @@
 
             <!-- Call to Action Button -->
             <div style="text-align: center;">
-                <a href="{{invitation_link}}" class="cta-button">Join Group Now</a>
+                <a href="{{invitation_link}}" class="cta-button" style="color: #ffffff;text-decoration: none;">Join
+                    Group Now</a>
             </div>
 
             <!-- Group Details -->
@@ -155,7 +153,7 @@
                 © 2025 Splitzy. All rights reserved.
             </div>
             <div>
-                <a href="{{support_link}}" class="footer-link">Need help?</a> |
+                <a href="{{support_link}}" style="color:#667eea; text-decoration:none;">Need help?</a> |
 
             </div>
         </div>
