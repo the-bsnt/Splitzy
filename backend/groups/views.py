@@ -174,7 +174,6 @@ class InvitationView(APIView):
             return response
 
     def send_invitation(self, invitation_details, group):
-        HOST_DOMAIN = settings.HOST_DOMAIN
         CLIENT_DOMAIN = settings.CLIENT_DOMAIN
         subject = f"You're invited to join {group} on Splitzy!"
         invited_email = invitation_details.get("invited_email")
