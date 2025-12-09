@@ -28,17 +28,17 @@ RUN apt-get update \
 RUN pip install --upgrade pip
 
 # Copy and install Python dependencies
-COPY ./requirements.txt $APP_HOME/requirements.txt
+COPY ./backend/requirements.txt $APP_HOME/requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy project files into the container
-COPY . $APP_HOME
+COPY ./backend $APP_HOME
 
 # Copy and configure entrypoint scripts
-COPY ./scripts/entrypoint /entrypoint
+COPY ./docker/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint && chmod +x /entrypoint
 
-COPY ./scripts/start /start
+COPY ./docker/django/start /start
 RUN sed -i 's/\r$//g' /start && chmod +x /start
 
 # Expose the application port

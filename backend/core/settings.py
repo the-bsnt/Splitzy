@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64"]
 
 HOST_DOMAIN = "http://127.0.0.1:8000"  # hard coded add this in .env file
 # Application definition
-CLIENT_DOMAIN = "http://localhost:5173"
+CLIENT_DOMAIN = "http://localhost:80"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
