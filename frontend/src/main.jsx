@@ -13,7 +13,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import GroupDashboard from "./pages/GroupDashboard";
-import Logo from "./components/Logo";
 import ExpenseDetail from "./pages/ExpenseDetail";
 import NotFound from "./pages/NotFound";
 import ServerError from "./pages/ServerError";
@@ -36,7 +35,6 @@ const router = createBrowserRouter(
         path="group/:groupName/expense/:expenseTitle"
         element={<ExpenseDetail />}
       />
-      <Route path="public/logo" element={<Logo />} />
       <Route path="/400" element={<NotFound />} />
       <Route path="/500" element={<ServerError />} />
       <Route path="*" element={<NotFound />} />

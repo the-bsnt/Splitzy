@@ -124,7 +124,7 @@ const GroupDashboard = () => {
     try {
       const response = await groupService.addMember(groupId, memberData);
       setMembers((prev) => [...prev, response.data]);
-      addNotification("Member Added Successfully!", "success");
+      addNotification("New Member Added to Group.", "success");
     } catch (err) {
       // console.error("Error adding member:", err);
       addNotification("Failed to add member!", "error");
@@ -323,6 +323,7 @@ const GroupDashboard = () => {
               onMemberClick={setSelectedMember}
               onRefresh={loadGroupData}
               user={currentUser}
+              addNotification={addNotification}
             />
           </div>
 

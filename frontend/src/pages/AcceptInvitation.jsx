@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { data, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Mail,
   UserPlus,
@@ -75,9 +75,11 @@ export default function AcceptInvitation() {
     setInvitedEmail(data.invited_email || "");
 
     if (data.code === "AUTH_REQUIRED") {
+      localStorage.removeItem("access");
       setStatus("auth_required");
       // Don't auto-redirect, let user click
     } else if (data.code === "REGISTER_REQUIRED") {
+      localStorage.removeItem("access");
       setStatus("register_required");
       // Don't auto-redirect, let user click
     } else if (data.code === "WRONG_USER") {
@@ -91,12 +93,20 @@ export default function AcceptInvitation() {
     authService.logout();
     localStorage.removeItem("access");
     const currentPath = `/accept-invitation?token=${token}`;
-    navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+    navigate(
+      `/login?redirect=${encodeURIComponent(
+        currentPath
+      )}&email=${encodeURIComponent(invitedEmail)}`
+    );
   };
 
   const handleManualLogin = () => {
     const currentPath = `/accept-invitation?token=${token}`;
-    navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+    navigate(
+      `/login?redirect=${encodeURIComponent(
+        currentPath
+      )}&email=${encodeURIComponent(invitedEmail)}`
+    );
   };
 
   const handleManualSignup = () => {
