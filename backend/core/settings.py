@@ -26,7 +26,7 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64", "188.166.232.12"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64", "165.22.108.64"]
 
 CLIENT_DOMAIN = os.getenv("CLIENT_DOMAIN")
 
@@ -166,14 +166,14 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "http://188.166.232.12",
-    "http://188.166.232.12:80",
+    "http://165.22.108.64",
+    "http://165.22.108.64:80",
 ]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
-    "http://188.166.232.12",
-    "http://188.166.232.12:80",
+    "http://165.22.108.64",
+    "http://165.22.108.64:80",
 ]
 
 # Required for sending cookies from backend -> frontend on different domains
