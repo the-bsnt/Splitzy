@@ -130,7 +130,7 @@ export default function SignUp() {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 flex flex-col items-center justify-center px-6">
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl absolute top-0">
-        <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
+        <img src="/splitzy.svg" className="mr-3 h-12" alt="Logo" />
       </nav>
 
       {/* Sign Up Form */}
