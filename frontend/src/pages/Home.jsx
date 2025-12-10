@@ -12,7 +12,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="w-full flex justify-between items-center py-6 max-w-6xl">
         <Link to="/" className="flex items-center">
-          <img src="/src/assets/splitzy.svg" className="mr-3 h-12" alt="Logo" />
+          <img src="/splitzy.svg" className="mr-3 h-12" alt="Logo" />
         </Link>
         <div className="space-x-3">
           <Link to="/login">
