@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,13 +24,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-c(6!hm5f7x-a8+hg-qf5p=m&*j+aydt^a#r+i76ac#b+e*6f(z"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", os.getenv("ALLOWED_HOST")]
 
-HOST_DOMAIN = "http://127.0.0.1:8000"  # hard coded add this in .env file
+HOST_DOMAIN = os.getenv("HOST_DOMAIN")
 # Application definition
-CLIENT_DOMAIN = "http://localhost:80"
+CLIENT_DOMAIN = os.getenv("CLIENT_DOMAIN")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -62,7 +63,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
-import os
 
 TEMPLATES = [
     {
@@ -165,10 +165,10 @@ SIMPLE_JWT = {
     # "SIGNING_KEY": SECRET_KEY,
 }
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+CORS_ALLOWED_ORIGINS = [os.getenv("CORS_ALLOWED_HOST")]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
+    os.getenv("CORS_ALLOWED_HOST"),
 ]
 
 # Required for sending cookies from backend -> frontend on different domains
