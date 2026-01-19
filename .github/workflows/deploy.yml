@@ -22,11 +22,12 @@ jobs:
 
       - name: deploy
         run: |
-          ssh -i ~/.ssh/private_key $SERVER_USER@SERVER_IP
-          cd /root/Splitzy
-          git pull origin main 
-          docker compose down 
-          docker compose up -d --build
+          ssh -i ~/.ssh/private_key $SERVER_USER@$SERVER_IP << 'EOF'
+            cd /root/Splitzy
+            git pull origin main 
+            docker compose down 
+            docker compose up -d --build
+          EOF
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
