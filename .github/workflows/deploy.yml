@@ -12,7 +12,7 @@ jobs:
       - name: setting ssh
         run: |
           mkdir -p ~/.ssh
-          echo "$SERVER_SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/private_key
+          echo "$SERVER_SSH_PRIVATE_KEY" > ~/.ssh/private_key
           chmod 600 ~/.ssh/private_key
           ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
 
