@@ -1,0 +1,33 @@
+name: Splitzy CICD pipeline
+
+on:
+  push:
+    branches: ["main"] # The Event: trigger on every push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: setting ssh
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SERVER_SSH_PRIVATE_KEY" | base64 -d > ~/.ssh/private_key
+          chmod 600 ~/.ssh/private_key
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
+
+        env:
+          SERVER_SSH_PRIVATE_KEY: ${{ SERVER_SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ SERVER_IP }}
+
+      - name: deploy
+        run: |
+          ssh -i ~/.ssh/private_key $SERVER_USER@SERVER_IP << 'EOF'
+            cd /root/Splitzy
+            git pull origin main 
+            docker compose down 
+            docker compose up -d --build
+          EOF
+        env:
+          SERVER_USER: ${{ SERVER_USER }}
+          SERVER_IP: ${{ SERVER_IP }}
