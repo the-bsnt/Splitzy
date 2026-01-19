@@ -26,7 +26,12 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "192.168.1.64", "165.22.108.64"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "165.22.108.64",
+    os.getenv("ALLOWED_HOST"),
+]
 
 CLIENT_DOMAIN = os.getenv("CLIENT_DOMAIN")
 
@@ -168,12 +173,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://165.22.108.64",
     "http://165.22.108.64:80",
+    os.getenv("CORS_ALLOWED_HOST"),
 ]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://165.22.108.64",
     "http://165.22.108.64:80",
+    os.getenv("CORS_ALLOWED_HOST"),
 ]
 
 # Required for sending cookies from backend -> frontend on different domains
