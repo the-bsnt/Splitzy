@@ -17,8 +17,8 @@ jobs:
           ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
 
         env:
-          SERVER_SSH_PRIVATE_KEY: ${{ SERVER_SSH_PRIVATE_KEY }}
-          SERVER_IP: ${{ SERVER_IP }}
+          SERVER_SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
 
       - name: deploy
         run: |
@@ -29,5 +29,5 @@ jobs:
             docker compose up -d --build
           EOF
         env:
-          SERVER_USER: ${{ SERVER_USER }}
-          SERVER_IP: ${{ SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
