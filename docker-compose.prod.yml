@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/django/Dockerfile
+    image: ${DOCKER_USER}/${IMAGE_NAME1}:latest
+    container_name: api-container
     command: /start
     volumes:
       - ./backend:/backend
@@ -27,6 +29,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
+    image: ${DOCKER_USER}/${IMAGE_NAME2}:latest
+    container_name: frontend-multistage-container
     restart: always
     ports:
       - "80:80"
@@ -51,7 +55,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     networks:
-      - splitzy # Use the correct network name
+      - splitzy
 
 networks:
   splitzy:
@@ -60,3 +64,5 @@ volumes:
   postgres_data:
   static_volume:
   media_volume:
+
+
