@@ -23,7 +23,7 @@ jobs:
 
       - name: build docker image and push to dockerhub
         run: |
-          docker compose build -f docker-compose.prod.yml
+          docker compose -f docker-compose.prod.yml build
           docker tag $DOCKER_USER/$IMAGE_NAME1:latest $DOCKER_USER/$IMAGE_NAME1:$TAG_NAME
           docker tag $DOCKER_USER/$IMAGE_NAME2:latest $DOCKER_USER/$IMAGE_NAME2:$TAG_NAME
           docker push --all-tags $DOCKER_USER/$IMAGE_NAME1          
@@ -65,7 +65,7 @@ jobs:
           envs: DOCKER_REGISTRY,DOCKER_USER,DOCKER_PSW,IMAGE_NAME1,IMAGE_NAME2
           script: |
             echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
-            docker compose pull -f docker-compose.prod.yml
+            docker compose -f docker-compose.prod.yml pull
             docker rm -f api-container || true
             docker rm -f frontend-multistage-container || true
             cd /home/bsnt/Splitzy
