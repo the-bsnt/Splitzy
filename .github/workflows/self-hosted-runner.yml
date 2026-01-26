@@ -5,74 +5,68 @@ on:
     branches: ["main"] # The Event: trigger on every push
 
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: docker login to runner
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME}}
-  #         password: ${{ secrets.DOCKER_PASSWD}}
-
-  #     - name: set tag for docker image
-  #       run: echo "TAG_NAME=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-  #     - name: build docker image and push to dockerhub
-  #       run: |
-  #         docker compose -f docker-compose.prod.yml build
-  #         docker tag $DOCKER_USER/$IMAGE_NAME1:latest $DOCKER_USER/$IMAGE_NAME1:$TAG_NAME
-  #         docker tag $DOCKER_USER/$IMAGE_NAME2:latest $DOCKER_USER/$IMAGE_NAME2:$TAG_NAME
-  #         docker push --all-tags $DOCKER_USER/$IMAGE_NAME1
-  #         docker push --all-tags $DOCKER_USER/$IMAGE_NAME2
-
-  #       env:
-  #         IMAGE_NAME1: splitzy-backend
-  #         IMAGE_NAME2: splitzy-frontend
-  #         DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
-
-  #     - name: setting ssh
-  #       run: |
-  #         mkdir -p ~/.ssh
-  #         echo "$SSH_PRIVATE_KEY"> ~/.ssh/private_key
-  #         chmod 600 ~/.ssh/private_key
-  #         ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
-
-  #       env:
-  #         SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-  #         HOST: ${{ secrets.SERVER_IP }}
-
-  #     - name: rsync code to server
-  #       run: |
-  #         rsync -avz -e "ssh -i ~/.ssh/private_key" . $USER@$HOST:/home/bsnt/Splitzy
-  #       env:
-  #         USER: ${{ secrets.SERVER_USER }}
-  #         HOST: ${{ secrets.SERVER_IP }}
-
-  # deploy:
-  #   runs-on: self-hosted
-  #   needs: build
-  #   steps:
-  #     - name: deployment to server
-  #       run: |
-  #         echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
-  #         cd /home/bsnt/Splitzy
-  #         docker compose -f docker-compose.prod.yml pull
-  #         docker rm -f api-container || true
-  #         docker rm -f frontend-multistage-container || true
-  #         docker compose -f docker-compose.prod.yml up -d --no-build
-  #       env:
-  #         DOCKER_REGISTRY: docker.io
-  #         DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
-  #         DOCKER_PSW: ${{ secrets.DOCKER_PASSWD}}
-  #         IMAGE_NAME1: splitzy-backend
-  #         IMAGE_NAME2: splitzy-frontend
-  test:
-    runs-on: self-hosted
     steps:
-      - name: testing path
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: docker login to runner
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME}}
+          password: ${{ secrets.DOCKER_PASSWD}}
+
+      - name: set tag for docker image
+        run: echo "TAG_NAME=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: build docker image and push to dockerhub
         run: |
-          pwd
+          docker compose -f docker-compose.prod.yml build
+          docker tag $DOCKER_USER/$IMAGE_NAME1:latest $DOCKER_USER/$IMAGE_NAME1:$TAG_NAME
+          docker tag $DOCKER_USER/$IMAGE_NAME2:latest $DOCKER_USER/$IMAGE_NAME2:$TAG_NAME
+          docker push --all-tags $DOCKER_USER/$IMAGE_NAME1          
+          docker push --all-tags $DOCKER_USER/$IMAGE_NAME2
+
+        env:
+          IMAGE_NAME1: splitzy-backend
+          IMAGE_NAME2: splitzy-frontend
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
+
+      - name: setting ssh
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY"> ~/.ssh/private_key
+          chmod 600 ~/.ssh/private_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.SERVER_IP }}
+
+      - name: rsync code to server
+        run: |
+          rsync -avz -e "ssh -i ~/.ssh/private_key" . $USER@$HOST:/home/bsnt/Splitzy
+        env:
+          USER: ${{ secrets.SERVER_USER }}
+          HOST: ${{ secrets.SERVER_IP }}
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: deployment to server
+        run: |
+          cd /home/bsnt/Splitzy
+          echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
+          docker compose -f docker-compose.prod.yml pull
+          docker rm -f api-container || true
+          docker rm -f frontend-multistage-container || true
+          docker compose -f docker-compose.prod.yml up -d --no-build
+        env:
+          DOCKER_REGISTRY: docker.io
+          DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
+          DOCKER_PSW: ${{ secrets.DOCKER_PASSWD}}
+          IMAGE_NAME1: splitzy-backend
+          IMAGE_NAME2: splitzy-frontend

@@ -65,10 +65,10 @@ jobs:
           envs: DOCKER_REGISTRY,DOCKER_USER,DOCKER_PSW,IMAGE_NAME1,IMAGE_NAME2
           script: |
             echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
+            cd /home/bsnt/Splitzy
             docker compose -f docker-compose.prod.yml pull
             docker rm -f api-container || true
             docker rm -f frontend-multistage-container || true
-            cd /home/bsnt/Splitzy
             docker compose -f docker-compose.prod.yml up -d --no-build
         env:
           DOCKER_REGISTRY: docker.io
