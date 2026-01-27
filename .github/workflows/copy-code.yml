@@ -19,8 +19,8 @@ jobs:
           mv * /home/tommy/clone-repo/Splitzy/
 
       - name: email notification
-        if: always()
-        uses: dawidd6/send-email-action@v7
+        if: success()
+        uses: dawidd6/send-email-action@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
@@ -30,23 +30,8 @@ jobs:
           subject: "Github Action Pipeline Result for ${{ github.repository }}"
           to: rdx.trxaster@gmail.com
           from: Splitzy Basnet Repo
-          body: "Build Result ${{ job.status }}"
-
-  # deploy:
-  #   runs-on: local-server
-  #   needs: build
-  #   steps:
-  #     - name: deployment to server
-  #       run: |
-  #         cd /home/tommy/TOMMY/Splitzy
-  #         echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
-  #         docker compose -f docker-compose.prod.yml pull
-  #         docker rm -f api-container || true
-  #         docker rm -f frontend-multistage-container || true
-  #         docker compose -f docker-compose.prod.yml up -d --no-build
-  #       env:
-  #         DOCKER_REGISTRY: docker.io
-  #         DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
-  #         DOCKER_PSW: ${{ secrets.DOCKER_PASSWD}}
-  #         IMAGE_NAME1: splitzy-backend
-  #         IMAGE_NAME2: splitzy-frontend
+          body: |
+            Pipeline Status: ${{ job.status }}
+            Repository: Github_project
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
