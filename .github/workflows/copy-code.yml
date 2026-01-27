@@ -20,7 +20,7 @@ jobs:
 
       - name: email notification
         if: always()
-        uses: dawight/send-email-action@v7
+        uses: dawidd6/send-email-action@v7
         with:
           server_address: smtp.gmail.com
           server_port: 465
