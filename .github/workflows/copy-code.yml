@@ -19,8 +19,8 @@ jobs:
           mv * /home/tommy/clone-repo/Splitzy/
 
       - name: email notification
-        if: success()
-        uses: dawidd6/send-email-action@v3
+        if: always()
+        uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
