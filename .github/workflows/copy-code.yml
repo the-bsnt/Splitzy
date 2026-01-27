@@ -11,8 +11,12 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
-        with:
-          path: /home/tommy/clone_repo
+
+      - name: move code from workspace to specific path
+
+        run: |
+          mkdir -p /home/tommy/clone-repo/Splitzy/
+          mv -r . /home/tommy/clone-repo/Splitzy/
 
   # deploy:
   #   runs-on: local-server
