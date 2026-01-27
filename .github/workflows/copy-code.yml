@@ -16,7 +16,7 @@ jobs:
 
         run: |
           mkdir -p /home/tommy/clone-repo/Splitzy/
-          mv . /home/tommy/clone-repo/Splitzy/
+          mv * /home/tommy/clone-repo/Splitzy/
 
   # deploy:
   #   runs-on: local-server
