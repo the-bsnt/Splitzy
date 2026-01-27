@@ -1,0 +1,34 @@
+name: Clone Repo to Local Server
+
+on:
+  push:
+    branches: ["main"] # The Event: trigger on every push
+
+jobs:
+  clone-repo:
+    runs-on: local-server
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          path: /home/tommy/clone_repo
+
+  # deploy:
+  #   runs-on: local-server
+  #   needs: build
+  #   steps:
+  #     - name: deployment to server
+  #       run: |
+  #         cd /home/tommy/TOMMY/Splitzy
+  #         echo "$DOCKER_PSW" | docker login $DOCKER_REGISTRY -u $DOCKER_USER --password-stdin
+  #         docker compose -f docker-compose.prod.yml pull
+  #         docker rm -f api-container || true
+  #         docker rm -f frontend-multistage-container || true
+  #         docker compose -f docker-compose.prod.yml up -d --no-build
+  #       env:
+  #         DOCKER_REGISTRY: docker.io
+  #         DOCKER_USER: ${{ secrets.DOCKER_USERNAME}}
+  #         DOCKER_PSW: ${{ secrets.DOCKER_PASSWD}}
+  #         IMAGE_NAME1: splitzy-backend
+  #         IMAGE_NAME2: splitzy-frontend
