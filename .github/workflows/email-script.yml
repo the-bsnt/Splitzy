@@ -22,4 +22,4 @@ jobs:
         env:
           EMAIL_PASS: ${{ secrets.EMAIL_PASSWORD }}
           STATUS: ${{ job.status }}
-        run: python3 .github/scripts/email.py
+        run: python3 .github/scripts/email-script.py
