@@ -1,0 +1,25 @@
+name: Clone Repo to Local Server
+
+on:
+  push:
+    branches: ["main"] # The Event: trigger on every push
+
+jobs:
+  clone-repo:
+    runs-on: local-server
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: email notification
+        if: always()
+        env:
+          EMAIL_PASS: ${{ secrets.EMAIL_PASSWORD }}
+          STATUS: ${{ job.status }}
+        run: python3 .github/scripts/email.py

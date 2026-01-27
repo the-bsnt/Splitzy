@@ -1,0 +1,37 @@
+name: Clone Repo to Local Server
+
+on:
+  push:
+    branches: ["main"] # The Event: trigger on every push
+
+jobs:
+  clone-repo:
+    runs-on: local-server
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: move code from workspace to specific path
+
+        run: |
+          mkdir -p /home/tommy/clone-repo/Splitzy/
+          mv * /home/tommy/clone-repo/Splitzy/
+
+      - name: email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+
+          subject: "Github Action Pipeline Result for ${{ github.repository }}"
+          to: rdx.trxaster@gmail.com
+          from: Splitzy Basnet Repo
+          body: |
+            Pipeline Status: ${{ job.status }}
+            Repository: Github_project
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
