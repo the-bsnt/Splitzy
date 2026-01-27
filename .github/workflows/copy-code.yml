@@ -18,20 +18,26 @@ jobs:
           mkdir -p /home/tommy/clone-repo/Splitzy/
           mv * /home/tommy/clone-repo/Splitzy/
 
+      # - name: email notification
+      #   if: always()
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.gmail.com
+      #     server_port: 465
+      #     username: ${{ secrets.EMAIL_USERNAME }}
+      #     password: ${{ secrets.EMAIL_PASSWORD }}
+
+      #     subject: "Github Action Pipeline Result for ${{ github.repository }}"
+      #     to: rdx.trxaster@gmail.com
+      #     from: Splitzy Basnet Repo
+      #     body: |
+      #       Pipeline Status: ${{ job.status }}
+      #       Repository: Github_project
+      #       Branch: ${{ github.ref_name }}
+      #       Commit: ${{ github.sha }}
       - name: email notification
         if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-
-          subject: "Github Action Pipeline Result for ${{ github.repository }}"
-          to: rdx.trxaster@gmail.com
-          from: Splitzy Basnet Repo
-          body: |
-            Pipeline Status: ${{ job.status }}
-            Repository: Github_project
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
+        env:
+          EMAIL_PASS: ${{ secrets.EMAIL_PASSWORD }}
+          STATUS: ${{ job.status }}
+        run: python3 .github/scripts/email.py
