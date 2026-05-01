@@ -16,10 +16,10 @@ services:
     networks:
       - splitzy # Use the correct network name
 
-  nginx:
+  frontend:
     image: docker.io/bsnt/splitzy-frontend:latest
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - /usr/share/nginx/html
       - static_volume:/app/staticfiles
@@ -42,7 +42,7 @@ services:
 
 networks:
   splitzy:
-    driver: overlay
+    driver: bridge
 volumes:
   postgres_data:
   static_volume:
