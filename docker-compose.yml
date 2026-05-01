@@ -1,10 +1,9 @@
-# version: "3.8"
-
 services:
   api:
     build:
       context: .
       dockerfile: ./docker/django/Dockerfile
+    image: docker.io/bsnt/splitzy-backend:latest
     command: /start
     volumes:
       - ./backend:/backend
@@ -14,19 +13,16 @@ services:
       - 8000
     env_file:
       - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=core.settings
-      - PG_HOST=postgres-db
-      - PG_PORT=5432
     depends_on:
       - postgres-db
     networks:
       - splitzy # Use the correct network name
 
-  nginx:
+  app:
     build:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
+    image: docker.io/bsnt/splitzy-frontend:latest
     restart: always
     ports:
       - "80:80"

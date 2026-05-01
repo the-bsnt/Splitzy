@@ -4,7 +4,14 @@ FROM node:20-slim AS react
 ENV APP_HOME=/frontend
 WORKDIR $APP_HOME
 
-
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    netcat-openbsd \
+    telnet \
+    curl \
+    dnsutils \
+    iputils-ping \
+    && apt-get clean
 # Copy package definition files
 COPY frontend/package*.json .
 

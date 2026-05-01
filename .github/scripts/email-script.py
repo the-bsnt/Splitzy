@@ -12,7 +12,6 @@ def send_notification(status):
     msg["Subject"] = f"CI/CD Alert: {status}"
     msg["To"] = "rdx.trxaster@gmail.com"
 
-    # Standard SMTP setup
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login("codexzbsnt@gmail.com", os.environ["EMAIL_PASS"])
         smtp.send_message(msg)
