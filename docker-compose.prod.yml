@@ -1,85 +1,47 @@
-name: splitzy
 services:
   api:
-    command:
-      - /start
-    depends_on:
-      postgres-db:
-        condition: service_started
-        required: true
-    environment:
-      ALLOWED_HOST: 127.0.0.1
-      CLIENT_DOMAIN: http://127.0.0.1
-      CORS_ALLOWED_HOST: http://127.0.0.1
-      DJANGO_SETTINGS_MODULE: core.settings
-      EMAIL_HOST_PASSWORD: hobylcqoxrpagolm
-      EMAIL_HOST_USER: codexz.bsnt@gmail.com
-      PG_HOST: postgres-db
-      PG_PORT: "5432"
-      POSTGRES_DB: splitzy
-      POSTGRES_ENGINE: django.db.backends.postgresql
-      POSTGRES_HOST: postgres-db
-      POSTGRES_PASSWORD: root1234
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: postgres2
     image: docker.io/bsnt/splitzy-backend:latest
-    networks:
-      splitzy: null
+    command: /start
     volumes:
-      - type: volume
-        source: static_volume
-        target: /backend/staticfiles
-        volume: {}
-      - type: volume
-        source: media_volume
-        target: /backend/mediafiles
-        volume: {}
-  nginx:
+      - static_volume:/backend/staticfiles
+      - media_volume:/backend/mediafiles
+    env_file:
+      - .env
     depends_on:
-      api:
-        condition: service_started
-        required: true
+      - postgres-db
+    networks:
+      - splitzy
+    restart: always
+  frontend:
     image: docker.io/bsnt/splitzy-frontend:latest
-    networks:
-      splitzy: null
     ports:
-      - mode: ingress
-        target: 80
-        published: "8080"
-        protocol: tcp
+      - "8080:80"
     volumes:
-      - type: volume
-        target: /usr/share/nginx/html
-        volume: {}
-      - type: volume
-        source: static_volume
-        target: /app/staticfiles
-        volume: {}
-      - type: volume
-        source: media_volume
-        target: /app/mediafiles
-        volume: {}
-  postgres-db:
-    environment:
-      POSTGRES_DB: splitzy
-      POSTGRES_PASSWORD: root1234
-      POSTGRES_USER: postgres2
-    image: postgres:15.0-alpine
+      - /usr/share/nginx/html
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    depends_on:
+      - api
     networks:
-      splitzy: null
+      - splitzy
+    restart: always
+
+  postgres-db:
+    image: postgres:15.0-alpine
     volumes:
-      - type: volume
-        source: postgres_data
-        target: /var/lib/postgresql/data
-        volume: {}
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - splitzy
+    restart: always
+
 networks:
   splitzy:
-    name: splitzy_splitzy
     driver: bridge
 volumes:
-  media_volume:
-    name: splitzy_media_volume
   postgres_data:
-    name: splitzy_postgres_data
   static_volume:
-    name: splitzy_static_volume
+  media_volume:
