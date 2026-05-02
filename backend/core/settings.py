@@ -26,7 +26,12 @@ import os
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [os.getenv("ALLOWED_HOST")]
+ALLOWED_HOSTS = [
+    os.getenv("ALLOWED_HOST"),
+    "localhost",
+    "127.0.0.1",
+    ".basnetsumit.com.np",
+]
 CLIENT_DOMAIN = os.getenv("CLIENT_DOMAIN")
 
 INSTALLED_APPS = [
@@ -163,13 +168,9 @@ SIMPLE_JWT = {
     # "SIGNING_KEY": SECRET_KEY,
 }
 
-CORS_ALLOWED_ORIGINS = [
-    os.getenv("CORS_ALLOWED_HOST"),
-]
+CORS_ALLOWED_ORIGINS = [os.getenv("CORS_ALLOWED_HOST"), "https://*.basnetsumit.com.np"]
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = [
-    os.getenv("CORS_ALLOWED_HOST"),
-]
+CSRF_TRUSTED_ORIGINS = [os.getenv("CORS_ALLOWED_HOST"), "https://*.basnetsumit.com.np"]
 
 # Required for sending cookies from backend -> frontend on different domains
 SESSION_COOKIE_SAMESITE = "None"
