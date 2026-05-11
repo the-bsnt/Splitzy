@@ -7,15 +7,11 @@ services:
       - media_volume:/backend/mediafiles
     env_file:
       - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
-      - PG_HOST=${POSTGRES_HOST}
-      - PG_PORT=${POSTGRES_PORT}
     depends_on:
       - postgres-db
     networks:
-      - splitzy # Use the correct network name
-
+      - splitzy
+    restart: always
   frontend:
     image: docker.io/bsnt/splitzy-frontend:latest
     ports:
@@ -28,6 +24,7 @@ services:
       - api
     networks:
       - splitzy
+    restart: always
 
   postgres-db:
     image: postgres:15.0-alpine
@@ -39,12 +36,56 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     networks:
       - splitzy
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    expose:
+      - "9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+    networks:
+      - splitzy
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    expose:
+      - "9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - splitzy
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - splitzy
 
 networks:
   splitzy:
     driver: bridge
+
 volumes:
   postgres_data:
   static_volume:
   media_volume:
+  prometheus-data:
+  grafana-data:
 
