@@ -138,6 +138,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.omni
 
 # Spyder project settings
 .spyderproject
@@ -177,4 +178,5 @@ cython_debug/
 .vite/
 
 
-docker-compose.prod.yml
+docker-compose.prod.
+
