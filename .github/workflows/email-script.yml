@@ -1,8 +1,8 @@
 name: Clone Repo to Local Server
 
-on:
-  push:
-    branches: ["main"] # The Event: trigger on every push
+# on:
+#   push:
+#     branches: ["main"] # The Event: trigger on every push
 
 jobs:
   clone-repo:
