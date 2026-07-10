@@ -76,6 +76,19 @@ services:
       - splitzy
     restart: unless-stopped
 
+  blackbox_exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox_exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
+    networks:
+      - splitzy
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus

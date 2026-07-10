@@ -50,7 +50,7 @@
   "title": "Docker Stack Observability - Host, Containers, Health & Logs",
   "uid": "docker-observability",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "15s",
@@ -85,16 +85,21 @@
     {
       "id": 100,
       "type": "row",
-      "title": "Overview",
+      "title": "Service Health",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
     },
     {
       "id": 1,
       "type": "stat",
-      "title": "Host Status",
+      "title": "API Service",
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
       "datasource": "Prometheus",
-      "targets": [{ "expr": "up{job=\"node-exporter\"}", "refId": "A" }],
+      "targets": [
+        {
+          "expr": "count_over_time(container_last_seen{name=~\"(?i).*(api|backend|splitzy-backend).*\"}[5m]) > bool 0",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -124,56 +129,102 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Prometheus Targets Up",
+      "title": "Frontend Service",
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
-      "datasource": "Prometheus",
-      "targets": [{ "expr": "sum(up)", "refId": "A" }],
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 3 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": { "colorMode": "value", "graphMode": "none" }
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "Running Containers",
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
-      "datasource": "Prometheus",
-      "targets": [
-        { "expr": "count(container_last_seen{name!=\"\"})", "refId": "A" }
-      ],
-      "options": { "colorMode": "value", "graphMode": "none" }
-    },
-    {
-      "id": 4,
-      "type": "gauge",
-      "title": "Host CPU Usage %",
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
       "datasource": "Prometheus",
       "targets": [
         {
-          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "expr": "count_over_time(container_last_seen{name=~\"(?i).*(frontend|app|splitzy-frontend).*\"}[5m]) > bool 0",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "max": 100,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "UP", "color": "green" }
+              }
+            }
+          ],
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Postgres Service",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "count_over_time(container_last_seen{name=~\"(?i).*(postgres|postgres-db).*\"}[5m]) > bool 0",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "UP", "color": "green" }
+              }
+            }
+          ],
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value"
+      }
+    },
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "Core Services Up",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "((count_over_time(container_last_seen{name=~\"(?i).*(api|backend|splitzy-backend).*\"}[5m]) > bool 0) + (count_over_time(container_last_seen{name=~\"(?i).*(frontend|app|splitzy-frontend).*\"}[5m]) > bool 0) + (count_over_time(container_last_seen{name=~\"(?i).*(postgres|postgres-db).*\"}[5m]) > bool 0))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "max": 3,
           "min": 0,
           "thresholds": {
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 70 },
-              { "color": "red", "value": 90 }
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "yellow", "value": 2 },
+              { "color": "green", "value": 3 }
             ]
           }
         },

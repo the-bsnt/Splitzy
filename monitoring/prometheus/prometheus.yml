@@ -37,3 +37,19 @@ scrape_configs:
           - "promtail:9080"
         labels:
           service: "promtail"
+
+  - job_name: "blackbox_dns"
+    metrics_path: /probe
+    params:
+      module: [dns_udp] # Tells Blackbox to use its DNS testing engine
+    static_configs:
+      - targets:
+          - 1.1.1.1:53 # The DNS Server you are testing
+          - 8.8.8.8:53 # Another DNS Server
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115
